@@ -510,6 +510,33 @@ namespace LyricEditor
         }
 
         /// <summary>
+        /// 播放速度
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            MediaPlayer.SpeedRatio = e.NewValue;
+        }
+
+        /// <summary>
+        /// 搜索歌词
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SerachLyric_Click(object sender, RoutedEventArgs e)
+        {
+            if (Title == "") return;
+
+            string singer = Title.Split('-')[0];
+            string songTitle = Title.Split('-')[1];
+
+
+
+
+        }
+
+        /// <summary>
         /// 时间轴点击
         /// </summary>
         private void TimeClickBar_MouseDown(object sender, MouseButtonEventArgs e)
@@ -684,5 +711,6 @@ namespace LyricEditor
         }
 
         #endregion
+
     }
 }

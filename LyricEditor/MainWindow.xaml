@@ -10,7 +10,7 @@
         Height="600"
         MinWidth="800"
         MinHeight="600"
-        d:Title="歌词制作器 宋祖英 - 我的祖国"
+        Title="歌词制作器"
         Icon="Icons/LrcMaker.ico"
         WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded"
@@ -292,6 +292,7 @@
                                 <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant" />
                             </Style>
                         </Grid.Resources>
+                        
                         <Image Source="Icons/MediaButtonIcons/volume.png" />
                         <Slider Name="VolumeSlider"
                                 Grid.Column="1"
@@ -300,6 +301,7 @@
                                 Maximum="1"
                                 Value="{Binding ElementName=MediaPlayer, Path=Volume, Mode=TwoWay}" />
                         <TextBlock Grid.Column="2" Text="{Binding ElementName=VolumeSlider, Path=Value, StringFormat={}{0:N1}}" />
+                        
                         <Image Grid.Row="1" Source="Icons/MediaButtonIcons/clock.png" />
                         <Slider Name="SpeedSlider"
                                 Grid.Row="1"
@@ -308,11 +310,17 @@
                                 Minimum="0.5"
                                 TickFrequency="0.25"
                                 Style="{DynamicResource RoundToggleSlider}"
-                                Value="{Binding ElementName=MediaPlayer, Path=SpeedRatio, Mode=TwoWay}" />
+                                Value="1.0"
+                                ValueChanged="SpeedSlider_ValueChanged" />
                         <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding ElementName=SpeedSlider, Path=Value, StringFormat={}{0:0.0}}" />
                     </Grid>
                 </StackPanel>
             </Border>
+
+            <Button Name="SerachLyric"
+                    Width="120" Height="20"
+                    Content="搜索歌词"
+                    Click="SerachLyric_Click"/>
 
         </StackPanel>
 

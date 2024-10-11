@@ -16,7 +16,7 @@ namespace LyricEditor.Utils
             image.BeginInit();
             image.StreamSource = new MemoryStream(bin);
             image.EndInit();
-
+            
             return image;
         }
 
