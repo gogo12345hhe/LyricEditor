@@ -10,13 +10,15 @@
     </PropertyGroup>
     <ItemGroup>
         <Resource Include="Icons\**\*.*" />
-        <Resource Include="Icons\LrcMaker.ico" />
+
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Costura.Fody" Version="5.7.0">
           <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive; compile</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="RestSharp" Version="112.1.0" />
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
         <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
         <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />

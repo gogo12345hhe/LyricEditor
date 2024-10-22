@@ -317,7 +317,16 @@
                 </StackPanel>
             </Border>
 
-            <Button Name="SerachLyric"
+            <StackPanel>
+                <TextBlock Text="标题"/>
+                <TextBox Name="TitleBox" Margin="0,2,0,0" Height="20" VerticalContentAlignment="Center"/>
+                <TextBlock Text="艺术家" Margin="0,5,0,0"/>
+                <TextBox Name="PerformerBox" Margin="0,2,0,0" Height="20" VerticalContentAlignment="Center"/>
+                <TextBlock Text="专辑" Margin="0,5,0,0"/>
+                <TextBox Name="AlbumBox" Margin="0,2,0,0" Height="20" VerticalContentAlignment="Center" />
+            </StackPanel>
+
+            <Button Name="SerachLyric" Margin="0,15,0,0"
                     Width="120" Height="20"
                     Content="搜索歌词"
                     Click="SerachLyric_Click"/>
@@ -374,7 +383,8 @@
                     Click="SetTime_Click">
                 <Image Source="Icons/ToolButtonIcons/Flag-red.png" />
             </Button>
-            <Button Margin="0,0,0,10" Click="SwitchLrcPanel_Click">
+            <Button Name="SwitchLrcPanelButton"
+                Margin="0,0,0,10" Click="SwitchLrcPanel_Click">
                 <Button.ToolTip>
                     切换歌词编辑模式
                 </Button.ToolTip>

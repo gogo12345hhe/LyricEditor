@@ -33,10 +33,14 @@ namespace LyricEditor
             LrcLinePanel = (LrcLineView)LrcPanelContainer.Content;
             LrcTextPanel = new LrcTextView();
 
+            SwitchLrcPanelButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
             Timer = new DispatcherTimer();
             Timer.Tick += new EventHandler(Timer_Tick);
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
+
+            //ImportMedia("D:\\C#\\LyricEditor\\王唯旖 - 舍得.flac");
         }
 
         #region 成员变量
@@ -140,6 +144,15 @@ namespace LyricEditor
             LrcTextPanel.Text = LrcManager.Instance.ToString();
         }
 
+        public void UpdateLrcViewInvoke()
+        {
+            LrcLinePanel.Dispatcher.Invoke(() =>
+            {
+                LrcLinePanel.UpdateLrcPanel();
+                LrcTextPanel.Text = LrcManager.Instance.ToString();
+            });
+        }
+
         private void ImportMedia(string filename)
         {
             try
@@ -149,8 +162,13 @@ namespace LyricEditor
                 var title = TagLibHelper.GetTitle(filename);
                 if (string.IsNullOrWhiteSpace(title))
                     title = Path.GetFileNameWithoutExtension(filename);
-                Title = $"歌词编辑器 {title}";
+                TitleBox.Text = title;
+                var performers = TagLibHelper.GetPerformers(filename);
+                PerformerBox.Text = performers;
+                Title = $"歌词编辑器 {performers} - {title}";
                 Cover.Source = TagLibHelper.GetAlbumArt(filename);
+                var album = TagLibHelper.GetAlbum(filename);
+                AlbumBox.Text = album;
             }
             catch
             {
@@ -526,12 +544,14 @@ namespace LyricEditor
         /// <param name="e"></param>
         private void SerachLyric_Click(object sender, RoutedEventArgs e)
         {
-            if (Title == "") return;
+            if (MediaPlayer.Source is null) return;
 
-            string singer = Title.Split('-')[0];
-            string songTitle = Title.Split('-')[1];
+            string performers = PerformerBox.Text;
+            string title = TitleBox.Text;
 
-
+            SearchLyric searchLyric = new SearchLyric(this, title, performers);
+            
+            searchLyric.Show();
 
 
         }

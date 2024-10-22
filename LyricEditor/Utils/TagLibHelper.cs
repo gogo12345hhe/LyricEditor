@@ -16,7 +16,8 @@ namespace LyricEditor.Utils
             image.BeginInit();
             image.StreamSource = new MemoryStream(bin);
             image.EndInit();
-            
+            file.Dispose();
+
             return image;
         }
 
@@ -26,7 +27,38 @@ namespace LyricEditor.Utils
         public static string GetTitle(string filename)
         {
             var file = TagLib.File.Create(filename);
-            return file.Tag.Title;
+            string title = file.Tag.Title;
+            file.Dispose();
+
+            return title;
+        }
+
+        /// <summary>
+        /// 获取作者
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string GetPerformers(string filename)
+        {
+            var file = TagLib.File.Create(filename);
+            string performers = file.Tag.Performers[0];
+            file.Dispose();
+
+            return performers;
+        }
+
+        /// <summary>
+        /// 获取唱片集
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string GetAlbum(string filename)
+        {
+            var file = TagLib.File.Create(filename);
+            string album = file.Tag.Album;
+            file.Dispose();
+
+            return album;
         }
     }
 }
