@@ -2,15 +2,16 @@
 using LyricEditor.UserControls;
 using LyricEditor.Utils;
 using System;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml;
 using Forms = System.Windows.Forms;
 
 namespace LyricEditor
@@ -59,6 +60,10 @@ namespace LyricEditor
         public TimeSpan LongTimeShift { get; private set; } = new TimeSpan(0, 0, 5);
 
         private string fileName;
+
+        private string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().ManifestModule.Name),
+            $"{Assembly.GetExecutingAssembly().ManifestModule.Name}.config");
 
         #endregion
 
@@ -187,20 +192,67 @@ namespace LyricEditor
         {
             #region 读取配置
 
-            // 退出时自动缓存
-            AutoSaveTemp.IsChecked = bool.Parse(ConfigurationManager.AppSettings["AutoSaveTemp"]);
-            // 导出 UTF-8
-            ExportUTF8.IsChecked = bool.Parse(ConfigurationManager.AppSettings["ExportUTF8"]);
-            // 时间取近似值
-            LrcLinePanel.ApproxTime =
-                LrcLine.IsShort =
-                ApproxTime.IsChecked =
-                    bool.Parse(ConfigurationManager.AppSettings["ApproxTime"]);
-            // 时间偏差（改变 Text 会触发 TextChanged 事件，下同）
-            TimeOffset.Text = ConfigurationManager.AppSettings["TimeOffset"];
-            // 快进快退
-            ShortShift.Text = ConfigurationManager.AppSettings["ShortTimeShift"];
-            LongShift.Text = ConfigurationManager.AppSettings["LongTimeShift"];
+            if (!File.Exists(configPath))
+            {
+                if (!Directory.Exists(Path.GetDirectoryName(configPath))) { Directory.CreateDirectory(Path.GetDirectoryName(configPath)); }
+                Stream stream = Application.GetResourceStream(new Uri("App.config", UriKind.Relative)).Stream;
+                using (FileStream sw = File.Create(configPath))
+                {
+                    stream.CopyTo(sw);
+                }
+            }
+
+            XmlDocument xmlDocument = new XmlDocument();
+            xmlDocument.Load(configPath);
+
+            XmlElement appSettings = xmlDocument["configuration"]["appSettings"];
+            foreach (XmlElement el in appSettings)
+            {
+                switch (el.GetAttribute("key"))
+                {
+                    // 退出时自动缓存
+                    case "AutoSaveTemp":
+                        AutoSaveTemp.IsChecked = bool.Parse(el.GetAttribute("value"));
+                        break;
+                    // 导出 UTF-8
+                    case "ExportUTF8":
+                        ExportUTF8.IsChecked = bool.Parse(el.GetAttribute("value"));
+                        break;
+                    // 时间取近似值
+                    case "ApproxTime":
+                        LrcLine.IsShort =
+                        ApproxTime.IsChecked =
+                            bool.Parse(el.GetAttribute("value"));
+                        break;
+                    // 时间偏差（改变 Text 会触发 TextChanged 事件，下同）
+                    case "TimeOffset":
+                        TimeOffset.Text = el.GetAttribute("value");
+                        break;
+                    // 快进快退
+                    case "ShortTimeShift":
+                        ShortShift.Text = el.GetAttribute("value");
+                        break;
+                    case "LongTimeShift":
+                        LongShift.Text = el.GetAttribute("value");
+                        break;
+                }
+            }
+
+
+            //// 退出时自动缓存
+            //AutoSaveTemp.IsChecked = bool.Parse(ConfigurationManager.AppSettings["AutoSaveTemp"]);
+            //// 导出 UTF-8
+            //ExportUTF8.IsChecked = bool.Parse(ConfigurationManager.AppSettings["ExportUTF8"]);
+            //// 时间取近似值
+            //LrcLinePanel.ApproxTime =
+            //    LrcLine.IsShort =
+            //    ApproxTime.IsChecked =
+            //        bool.Parse(ConfigurationManager.AppSettings["ApproxTime"]);
+            //// 时间偏差（改变 Text 会触发 TextChanged 事件，下同）
+            //TimeOffset.Text = ConfigurationManager.AppSettings["TimeOffset"];
+            //// 快进快退
+            //ShortShift.Text = ConfigurationManager.AppSettings["ShortTimeShift"];
+            //LongShift.Text = ConfigurationManager.AppSettings["LongTimeShift"];
 
             #endregion
 
@@ -220,21 +272,56 @@ namespace LyricEditor
             Timer.Stop();
 
             // 保存配置文件
-            Configuration cfa = ConfigurationManager.OpenExeConfiguration(
-                ConfigurationUserLevel.None
-            );
+            XmlDocument xmlDocument = new XmlDocument();
+            xmlDocument.Load(configPath);
 
-            cfa.AppSettings.Settings["AutoSaveTemp"].Value = AutoSaveTemp.IsChecked.ToString();
-            cfa.AppSettings.Settings["ExportUTF8"].Value = ExportUTF8.IsChecked.ToString();
-            cfa.AppSettings.Settings["ApproxTime"].Value = LrcLinePanel.ApproxTime.ToString();
-            cfa.AppSettings.Settings["TimeOffset"].Value = (
-                -LrcLinePanel.TimeOffset.TotalMilliseconds
-            ).ToString();
-            cfa.AppSettings.Settings["ShortTimeShift"].Value =
-                ShortTimeShift.TotalSeconds.ToString();
-            cfa.AppSettings.Settings["LongTimeShift"].Value = LongTimeShift.TotalSeconds.ToString();
+            XmlElement appSettings = xmlDocument["configuration"]["appSettings"];
+            foreach (XmlElement el in appSettings)
+            {
+                switch (el.GetAttribute("key"))
+                {
+                    // 退出时自动缓存
+                    case "AutoSaveTemp":
+                        el.SetAttribute("value", AutoSaveTemp.IsChecked.ToString());
+                        break;
+                    // 导出 UTF-8
+                    case "ExportUTF8":
+                        el.SetAttribute("value", ExportUTF8.IsChecked.ToString());
+                        break;
+                    // 时间取近似值
+                    case "ApproxTime":
+                        el.SetAttribute("value", LrcLinePanel.ApproxTime.ToString());
+                        break;
+                    // 时间偏差（改变 Text 会触发 TextChanged 事件，下同）
+                    case "TimeOffset":
+                        el.SetAttribute("value", (-LrcLinePanel.TimeOffset.TotalMilliseconds).ToString());
+                        break;
+                    // 快进快退
+                    case "ShortTimeShift":
+                        el.SetAttribute("value", ShortTimeShift.TotalSeconds.ToString());
+                        break;
+                    case "LongTimeShift":
+                        el.SetAttribute("value", LongTimeShift.TotalSeconds.ToString());
+                        break;
+                }
+            }
+            xmlDocument.Save(configPath);
 
-            cfa.Save();
+            //Configuration cfa = ConfigurationManager.OpenExeConfiguration(
+            //    ConfigurationUserLevel.None
+            //);
+
+            //cfa.AppSettings.Settings["AutoSaveTemp"].Value = AutoSaveTemp.IsChecked.ToString();
+            //cfa.AppSettings.Settings["ExportUTF8"].Value = ExportUTF8.IsChecked.ToString();
+            //cfa.AppSettings.Settings["ApproxTime"].Value = LrcLinePanel.ApproxTime.ToString();
+            //cfa.AppSettings.Settings["TimeOffset"].Value = (
+            //    -LrcLinePanel.TimeOffset.TotalMilliseconds
+            //).ToString();
+            //cfa.AppSettings.Settings["ShortTimeShift"].Value =
+            //    ShortTimeShift.TotalSeconds.ToString();
+            //cfa.AppSettings.Settings["LongTimeShift"].Value = LongTimeShift.TotalSeconds.ToString();
+
+            //cfa.Save();
 
             // 保存缓存
             if (AutoSaveTemp.IsChecked)
@@ -550,7 +637,7 @@ namespace LyricEditor
             string title = TitleBox.Text;
 
             SearchLyric searchLyric = new SearchLyric(this, title, performers);
-            
+
             searchLyric.Show();
 
 

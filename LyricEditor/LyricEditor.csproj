@@ -23,9 +23,12 @@
 
     </ItemGroup>
     <ItemGroup>
+      <None Remove="App.config" />
+    </ItemGroup>
+    <ItemGroup>
         <PackageReference Include="Costura.Fody" Version="5.7.0">
           <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive; compile</IncludeAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive; Compile</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="RestSharp" Version="112.1.0" />
@@ -34,6 +37,9 @@
         <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
         <PackageReference Include="taglib" Version="2.1.0.0" />
         <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <Resource Include="App.config" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Properties\Settings.Designer.cs">
