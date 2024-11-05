@@ -77,11 +77,12 @@ namespace LyricEditor.Lyric
                     foreach (var line in lines)
                     {
                         // 在确认文本中包含时间标记的情况下，会忽略所有空行
-                        if (string.IsNullOrWhiteSpace(line))
-                        {
-                            lineNumber++;
-                            continue;
-                        }
+                        //if (string.IsNullOrWhiteSpace(line))
+                        //{
+                        //    lineNumber++;
+                        //    continue;
+                        //}
+                        lineNumber++;
 
                         var matches = reTimeMark.Matches(line);
                         // 出现了类似 [00:00.000][00:01.000] 的包含多个时间信息的歌词行

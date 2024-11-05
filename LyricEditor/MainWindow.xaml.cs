@@ -2,6 +2,7 @@
 using LyricEditor.UserControls;
 using LyricEditor.Utils;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -34,14 +35,14 @@ namespace LyricEditor
             LrcLinePanel = (LrcLineView)LrcPanelContainer.Content;
             LrcTextPanel = new LrcTextView();
 
-            SwitchLrcPanelButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            //SwitchLrcPanelButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
 
             Timer = new DispatcherTimer();
             Timer.Tick += new EventHandler(Timer_Tick);
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
 
-            //ImportMedia("D:\\C#\\LyricEditor\\王唯旖 - 舍得.flac");
+            ImportMedia("D:\\C#\\LyricEditor\\卓依婷 - 童年.mp3");
         }
 
         #region 成员变量
@@ -59,11 +60,14 @@ namespace LyricEditor
         public TimeSpan ShortTimeShift { get; private set; } = new TimeSpan(0, 0, 2);
         public TimeSpan LongTimeShift { get; private set; } = new TimeSpan(0, 0, 5);
 
-        private string fileName;
+        private string audioPath;
+        private string lrcPath;
 
         private string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().ManifestModule.Name),
             $"{Assembly.GetExecutingAssembly().ManifestModule.Name}.config");
+
+        private List<string> tmpList = new List<string>();
 
         #endregion
 
@@ -160,24 +164,37 @@ namespace LyricEditor
 
         private void ImportMedia(string filename)
         {
+            if (audioPath == filename) return;
+            else
+            {
+                audioPath = filename;
+            }
+
             try
             {
-                MediaPlayer.Source = new Uri(filename);
+                audioPath = filename;
+                string tmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + Path.GetExtension(filename));
+                tmpList.Add(tmpPath);
+                byte[] bytes = File.ReadAllBytes(filename);
+                File.WriteAllBytes(tmpPath, bytes);
+
+                MediaPlayer.Source = new Uri(tmpPath);
                 MediaPlayer.Stop();
-                var title = TagLibHelper.GetTitle(filename);
+                var title = TagLibHelper.GetTitle(tmpPath);
                 if (string.IsNullOrWhiteSpace(title))
-                    title = Path.GetFileNameWithoutExtension(filename);
+                    title = Path.GetFileNameWithoutExtension(tmpPath);
                 TitleBox.Text = title;
-                var performers = TagLibHelper.GetPerformers(filename);
+                var performers = TagLibHelper.GetPerformers(tmpPath);
                 PerformerBox.Text = performers;
                 Title = $"歌词编辑器 {performers} - {title}";
-                Cover.Source = TagLibHelper.GetAlbumArt(filename);
-                var album = TagLibHelper.GetAlbum(filename);
+                Cover.Source = TagLibHelper.GetAlbumArt(tmpPath);
+                var album = TagLibHelper.GetAlbum(tmpPath);
                 AlbumBox.Text = album;
             }
             catch
             {
                 Cover.Source = ResourceHelper.GetIcon("disc.png");
+                audioPath = string.Empty;
             }
         }
 
@@ -271,6 +288,9 @@ namespace LyricEditor
         {
             Timer.Stop();
 
+            //清理临时文件
+            foreach (string tmp in tmpList) File.Delete(tmp);
+
             // 保存配置文件
             XmlDocument xmlDocument = new XmlDocument();
             xmlDocument.Load(configPath);
@@ -346,7 +366,6 @@ namespace LyricEditor
             if (ofd.ShowDialog() == Forms.DialogResult.OK)
             {
                 ImportMedia(ofd.FileName);
-                fileName = ofd.FileName;
             }
         }
 
@@ -362,7 +381,7 @@ namespace LyricEditor
             {
                 LrcManager.Instance.LoadFromFile(ofd.FileName);
                 UpdateLrcView();
-                fileName = ofd.FileName;
+                lrcPath = ofd.FileName;
             }
         }
 
@@ -371,19 +390,36 @@ namespace LyricEditor
         /// </summary>
         private void ExportLyric_Click(object sender, RoutedEventArgs e)
         {
-            Forms.SaveFileDialog ofd = new Forms.SaveFileDialog();
-            ofd.Filter = "歌词文件|*.lrc|文本文件|*.txt|所有文件|*.*";
-
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                ofd.FileName = Path.GetFileNameWithoutExtension(fileName);
-            }
-
-            if (ofd.ShowDialog() == Forms.DialogResult.OK)
+            if (!string.IsNullOrEmpty(lrcPath))
             {
                 Encoding encoding = ExportUTF8.IsChecked ? Encoding.UTF8 : Encoding.Default;
-                File.WriteAllText(ofd.FileName, LrcManager.Instance.ToString(), encoding);
+                File.WriteAllText(lrcPath, LrcManager.Instance.ToString(), encoding);
             }
+            else
+            {
+                Forms.SaveFileDialog ofd = new Forms.SaveFileDialog
+                {
+                    Filter = "歌词文件|*.lrc|文本文件|*.txt|所有文件|*.*",
+                    FileName = $"{PerformerBox.Text} - {TitleBox.Text}.lrc",
+                    DefaultExt = "lrc"
+                };
+                if (ofd.ShowDialog() == Forms.DialogResult.OK)
+                {
+                    Encoding encoding = ExportUTF8.IsChecked ? Encoding.UTF8 : Encoding.Default;
+                    File.WriteAllText(ofd.FileName, LrcManager.Instance.ToString(), encoding);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将歌词保存至标签
+        /// </summary>
+        private void ExportLyricToTag_Click(object sender, RoutedEventArgs e)
+        {
+
+
+            //file. = LrcManager.Instance.ToString();
+            //file.Save();
         }
 
         /// <summary>
@@ -446,13 +482,12 @@ namespace LyricEditor
                 if (FileHelper.MediaExtensions.Contains(ext))
                 {
                     ImportMedia(file);
-                    fileName = file;
                 }
                 else if (FileHelper.LyricExtensions.Contains(ext))
                 {
                     LrcManager.Instance.LoadFromFile(file);
                     UpdateLrcView();
-                    fileName = file;
+                    lrcPath = file;
                 }
             }
         }
@@ -470,7 +505,7 @@ namespace LyricEditor
         /// </summary>
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void TimeOffset_TextChanged(object sender, TextChangedEventArgs e)
@@ -639,8 +674,7 @@ namespace LyricEditor
             SearchLyric searchLyric = new SearchLyric(this, title, performers);
 
             searchLyric.Show();
-
-
+            searchLyric.Search_Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
 
         /// <summary>

@@ -57,16 +57,19 @@ namespace LyricEditor
                 if (source == "网易云音乐")
                 {
                     JToken dataSongList = JsonConvert.DeserializeObject<JObject>(response.Content)["result"]["songs"];
-                    foreach (JToken song in dataSongList)
+                    if (dataSongList != null)
                     {
-                        string songMid = song["id"].ToString();
-                        string songName = song["name"].ToString();
-                        if (!songName.Contains(key.Split(' ')[0])) continue;
-                        string albumName = song["album"]["name"].ToString();
-                        var singer = string.Join(";", song["artists"].Select(x => x["name"].ToString()));
-                        //if (!singer.Contains(key.Split(' ')[1])) continue;
+                        foreach (JToken song in dataSongList)
+                        {
+                            string songMid = song["id"].ToString();
+                            string songName = song["name"].ToString();
+                            if (!songName.Contains(key.Split(' ')[0])) continue;
+                            string albumName = song["album"]["name"].ToString();
+                            var singer = string.Join(";", song["artists"].Select(x => x["name"].ToString()));
+                            //if (!singer.Contains(key.Split(' ')[1])) continue;
 
-                        _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                            _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                        }
                     }
                 }
                 else if (source == "QQ音乐")
@@ -122,7 +125,7 @@ namespace LyricEditor
             return lyric;
         }
 
-        private async void Search_Click(object sender, RoutedEventArgs e)
+        public async void Search_Click(object sender, RoutedEventArgs e)
         {
             string keyword = $"{title.Text} {artist.Text}";
             if (string.IsNullOrWhiteSpace(keyword)) return;

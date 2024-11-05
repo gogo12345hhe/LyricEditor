@@ -80,6 +80,7 @@
                     <MenuItem Header="来自剪贴板" Click="ImportLyricFromClipboard_Click" />
                 </MenuItem>
                 <MenuItem Header="保存" Click="ExportLyric_Click" />
+                <MenuItem Header="保存至标签" Click="ExportLyricToTag_Click" />
                 <MenuItem Header="复制到剪贴板" Click="ExportLyricToClipboard_Click" />
                 <Separator />
                 <MenuItem Header="首选项" Style="{StaticResource SubMenuItemHeaderStyle}">
@@ -164,7 +165,7 @@
         <StackPanel Grid.Row="1" Margin="5,5,0,5">
             <!-- 播放器 -->
             <MediaElement Name="MediaPlayer"
-                          Volume="0.7"
+                          Volume="0.3"
                           Visibility="Collapsed"
                           LoadedBehavior="Manual"
                           MediaOpened="MediaPlayer_MediaOpened" />

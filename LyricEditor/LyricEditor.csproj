@@ -32,10 +32,9 @@
         </PackageReference>
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="RestSharp" Version="112.1.0" />
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
         <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-        <PackageReference Include="System.Text.Encoding.CodePages" Version="6.0.0" />
-        <PackageReference Include="taglib" Version="2.1.0.0" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+        <PackageReference Include="TagLibSharp-Lidarr" Version="2.2.0.19" />
         <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
     </ItemGroup>
     <ItemGroup>
