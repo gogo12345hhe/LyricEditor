@@ -1,4 +1,5 @@
-﻿using LyricEditor.Lyric;
+﻿using ATL;
+using LyricEditor.Lyric;
 using LyricEditor.UserControls;
 using LyricEditor.Utils;
 using System;
@@ -11,14 +12,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Xml;
 using Forms = System.Windows.Forms;
-using ATL;
-using ATL.AudioData;
-using Commons;
-using System.Linq;
-using System.Windows.Media.Imaging;
 
 namespace LyricEditor
 {
@@ -209,8 +206,14 @@ namespace LyricEditor
                     Cover.Source = ResourceHelper.GetIcon("disc.png");
                 }
 
-                var album = theFile.Album;
+                string album = theFile.Album;
                 AlbumBox.Text = album;
+
+                if (theFile.AdditionalFields.TryGetValue("LYRICS", out string value))
+                {
+                    LrcManager.Instance.LoadFromText(value);
+                    UpdateLrcView();
+                }
             }
             catch
             {

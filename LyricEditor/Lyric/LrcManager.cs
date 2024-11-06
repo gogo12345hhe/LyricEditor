@@ -13,7 +13,7 @@ namespace LyricEditor.Lyric
     {
         public static LrcManager Instance { get; } = new LrcManager();
 
-        public List<LrcLine> LrcList { get; private set; } = new List<LrcLine>();
+        public List<LrcLine> LrcList { get; private set; } = [];
 
         public int Count => LrcList.Count;
 
@@ -46,7 +46,7 @@ namespace LyricEditor.Lyric
             // 查找形如 [00:00.000] 的时间标记
             var reTimeMark = new Regex(@"\[\d+\:\d+\.\d+\]");
             // 查找形如 [al:album] 的歌词信息
-            var reLrcInfo = new Regex(@"\[\w+\:.+\]");
+            var reLrcInfo = new Regex(@"\[\w+\:(.*?)+\]");
             // 查找纯歌词文本
             var reLyric = new Regex(@"(?<=\])[^\]]+$");
 
@@ -82,7 +82,6 @@ namespace LyricEditor.Lyric
                         //    lineNumber++;
                         //    continue;
                         //}
-                        lineNumber++;
 
                         var matches = reTimeMark.Matches(line);
                         // 出现了类似 [00:00.000][00:01.000] 的包含多个时间信息的歌词行
@@ -151,7 +150,7 @@ namespace LyricEditor.Lyric
         /// <summary>
         /// 存储历史记录（用的是最笨的方法真是抱歉）
         /// </summary>
-        private List<History> HistoryList = new List<History>();
+        private List<History> HistoryList = [];
 
         /// <summary>
         /// 历史记录指针
