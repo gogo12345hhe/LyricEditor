@@ -14,6 +14,11 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
 using Forms = System.Windows.Forms;
+using ATL;
+using ATL.AudioData;
+using Commons;
+using System.Linq;
+using System.Windows.Media.Imaging;
 
 namespace LyricEditor
 {
@@ -64,10 +69,10 @@ namespace LyricEditor
         private string lrcPath;
 
         private string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().ManifestModule.Name),
-            $"{Assembly.GetExecutingAssembly().ManifestModule.Name}.config");
+            Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().GetName().Name),
+            $"{Assembly.GetExecutingAssembly().GetName().Name}.config");
 
-        private List<string> tmpList = new List<string>();
+        private List<string> tmpList = [];
 
         #endregion
 
@@ -172,7 +177,6 @@ namespace LyricEditor
 
             try
             {
-                audioPath = filename;
                 string tmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + Path.GetExtension(filename));
                 tmpList.Add(tmpPath);
                 byte[] bytes = File.ReadAllBytes(filename);
@@ -180,15 +184,32 @@ namespace LyricEditor
 
                 MediaPlayer.Source = new Uri(tmpPath);
                 MediaPlayer.Stop();
-                var title = TagLibHelper.GetTitle(tmpPath);
+
+                Track theFile = new(tmpPath);
+                string title = theFile.Title;
                 if (string.IsNullOrWhiteSpace(title))
-                    title = Path.GetFileNameWithoutExtension(tmpPath);
+                    title = Path.GetFileNameWithoutExtension(audioPath);
                 TitleBox.Text = title;
-                var performers = TagLibHelper.GetPerformers(tmpPath);
+
+                string performers = theFile.Artist;
                 PerformerBox.Text = performers;
                 Title = $"歌词编辑器 {performers} - {title}";
-                Cover.Source = TagLibHelper.GetAlbumArt(tmpPath);
-                var album = TagLibHelper.GetAlbum(tmpPath);
+
+                if (theFile.EmbeddedPictures.Count != 0)
+                {
+                    PictureInfo embeddedPictures = theFile.EmbeddedPictures[0];
+                    BitmapImage image = new();
+                    image.BeginInit();
+                    image.StreamSource = new MemoryStream(embeddedPictures.PictureData);
+                    image.EndInit();
+                    Cover.Source = image;
+                }
+                else
+                {
+                    Cover.Source = ResourceHelper.GetIcon("disc.png");
+                }
+
+                var album = theFile.Album;
                 AlbumBox.Text = album;
             }
             catch
@@ -213,10 +234,8 @@ namespace LyricEditor
             {
                 if (!Directory.Exists(Path.GetDirectoryName(configPath))) { Directory.CreateDirectory(Path.GetDirectoryName(configPath)); }
                 Stream stream = Application.GetResourceStream(new Uri("App.config", UriKind.Relative)).Stream;
-                using (FileStream sw = File.Create(configPath))
-                {
-                    stream.CopyTo(sw);
-                }
+                using FileStream sw = File.Create(configPath);
+                stream.CopyTo(sw);
             }
 
             XmlDocument xmlDocument = new XmlDocument();
@@ -254,22 +273,6 @@ namespace LyricEditor
                         break;
                 }
             }
-
-
-            //// 退出时自动缓存
-            //AutoSaveTemp.IsChecked = bool.Parse(ConfigurationManager.AppSettings["AutoSaveTemp"]);
-            //// 导出 UTF-8
-            //ExportUTF8.IsChecked = bool.Parse(ConfigurationManager.AppSettings["ExportUTF8"]);
-            //// 时间取近似值
-            //LrcLinePanel.ApproxTime =
-            //    LrcLine.IsShort =
-            //    ApproxTime.IsChecked =
-            //        bool.Parse(ConfigurationManager.AppSettings["ApproxTime"]);
-            //// 时间偏差（改变 Text 会触发 TextChanged 事件，下同）
-            //TimeOffset.Text = ConfigurationManager.AppSettings["TimeOffset"];
-            //// 快进快退
-            //ShortShift.Text = ConfigurationManager.AppSettings["ShortTimeShift"];
-            //LongShift.Text = ConfigurationManager.AppSettings["LongTimeShift"];
 
             #endregion
 
@@ -327,22 +330,6 @@ namespace LyricEditor
             }
             xmlDocument.Save(configPath);
 
-            //Configuration cfa = ConfigurationManager.OpenExeConfiguration(
-            //    ConfigurationUserLevel.None
-            //);
-
-            //cfa.AppSettings.Settings["AutoSaveTemp"].Value = AutoSaveTemp.IsChecked.ToString();
-            //cfa.AppSettings.Settings["ExportUTF8"].Value = ExportUTF8.IsChecked.ToString();
-            //cfa.AppSettings.Settings["ApproxTime"].Value = LrcLinePanel.ApproxTime.ToString();
-            //cfa.AppSettings.Settings["TimeOffset"].Value = (
-            //    -LrcLinePanel.TimeOffset.TotalMilliseconds
-            //).ToString();
-            //cfa.AppSettings.Settings["ShortTimeShift"].Value =
-            //    ShortTimeShift.TotalSeconds.ToString();
-            //cfa.AppSettings.Settings["LongTimeShift"].Value = LongTimeShift.TotalSeconds.ToString();
-
-            //cfa.Save();
-
             // 保存缓存
             if (AutoSaveTemp.IsChecked)
             {
@@ -360,8 +347,10 @@ namespace LyricEditor
         /// </summary>
         private void ImportMedia_Click(object sender, RoutedEventArgs e)
         {
-            Forms.OpenFileDialog ofd = new Forms.OpenFileDialog();
-            ofd.Filter = "媒体文件|*.mp3;*.wav;*.3gp;*.mp4;*.avi;*.wmv;*.wma;*.aac|所有文件|*.*";
+            Forms.OpenFileDialog ofd = new()
+            {
+                Filter = "媒体文件|*.mp3;*.wav;*.3gp;*.mp4;*.avi;*.wmv;*.wma;*.aac|所有文件|*.*"
+            };
 
             if (ofd.ShowDialog() == Forms.DialogResult.OK)
             {
@@ -374,8 +363,10 @@ namespace LyricEditor
         /// </summary>
         private void ImportLyric_Click(object sender, RoutedEventArgs e)
         {
-            Forms.OpenFileDialog ofd = new Forms.OpenFileDialog();
-            ofd.Filter = "歌词文件|*.lrc;*.txt|所有文件|*.*";
+            Forms.OpenFileDialog ofd = new()
+            {
+                Filter = "歌词文件|*.lrc;*.txt|所有文件|*.*"
+            };
 
             if (ofd.ShowDialog() == Forms.DialogResult.OK)
             {
@@ -397,7 +388,7 @@ namespace LyricEditor
             }
             else
             {
-                Forms.SaveFileDialog ofd = new Forms.SaveFileDialog
+                Forms.SaveFileDialog ofd = new()
                 {
                     Filter = "歌词文件|*.lrc|文本文件|*.txt|所有文件|*.*",
                     FileName = $"{PerformerBox.Text} - {TitleBox.Text}.lrc",
@@ -416,10 +407,9 @@ namespace LyricEditor
         /// </summary>
         private void ExportLyricToTag_Click(object sender, RoutedEventArgs e)
         {
-
-
-            //file. = LrcManager.Instance.ToString();
-            //file.Save();
+            Track theFile = new(audioPath);
+            theFile.AdditionalFields["LYRICS"] = LrcManager.Instance.ToString();
+            theFile.Save();
         }
 
         /// <summary>
