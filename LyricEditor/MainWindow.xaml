@@ -77,6 +77,7 @@
                 <MenuItem Header="导入" Style="{StaticResource SubMenuItemHeaderStyle}">
                     <MenuItem Header="导入音频文件" Click="ImportMedia_Click" />
                     <MenuItem Header="导入歌词文件" Click="ImportLyric_Click" />
+                    <MenuItem Header="标签导入歌词" Click="ImportLyricFromTag_Click" />
                     <MenuItem Header="来自剪贴板" Click="ImportLyricFromClipboard_Click" />
                 </MenuItem>
                 <MenuItem Header="保存" Click="ExportLyric_Click" />
@@ -430,11 +431,17 @@
             </Button>
             <Separator />
             <StackPanel Name="ToolsForLrcLineOnly">
-                <Button Click="AddNewLine_Click">
+                <Button Click="AddNewLine_Click_Up">
+                    <Button.ToolTip>
+                        在当前位置上方添加新歌词行
+                    </Button.ToolTip>
+                    <Image Source="Icons/ToolButtonIcons/add1.png" />
+                </Button>
+                <Button Click="AddNewLine_Click_Down">
                     <Button.ToolTip>
                         在当前位置下方添加新歌词行（Insert）
                     </Button.ToolTip>
-                    <Image Source="Icons/ToolButtonIcons/add1.png" />
+                    <Image Source="Icons/ToolButtonIcons/add2.png" />
                 </Button>
                 <Button Click="DeleteLine_Click">
                     <Button.ToolTip>

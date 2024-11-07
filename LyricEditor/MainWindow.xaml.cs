@@ -380,6 +380,19 @@ namespace LyricEditor
         }
 
         /// <summary>
+        /// 导入歌词文件
+        /// </summary>
+        private void ImportLyricFromTag_Click(object sender, RoutedEventArgs e)
+        {
+            Track theFile = new(audioPath);
+            if (theFile.AdditionalFields.TryGetValue("LYRICS", out string value))
+            {
+                LrcManager.Instance.LoadFromText(value);
+                UpdateLrcView();
+            }   
+        }
+
+        /// <summary>
         /// 将歌词保存为文本文件
         /// </summary>
         private void ExportLyric_Click(object sender, RoutedEventArgs e)
@@ -545,10 +558,10 @@ namespace LyricEditor
         /// </summary>
         private void ShiftAllTime_Click(object sender, RoutedEventArgs e)
         {
-            string str = InputBox.Show(this, "输入", "请输入时间偏移量(s)：");
+            string str = InputBox.Show(this, "输入", "请输入时间偏移量(ms)：");
             if (double.TryParse(str, out double offset))
             {
-                LrcLinePanel.ShiftAllTime(new TimeSpan(0, 0, 0, 0, (int)(offset * 1000)));
+                LrcLinePanel.ShiftAllTime(new TimeSpan(0, 0, 0, 0, (int)(offset)));
             }
         }
 
@@ -664,7 +677,7 @@ namespace LyricEditor
             string performers = PerformerBox.Text;
             string title = TitleBox.Text;
 
-            SearchLyric searchLyric = new SearchLyric(this, title, performers);
+            SearchLyric searchLyric = new(this, title, performers);
 
             searchLyric.Show();
             searchLyric.Search_Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -741,9 +754,17 @@ namespace LyricEditor
         /// <summary>
         /// 添加新行
         /// </summary>
-        private void AddNewLine_Click(object sender, RoutedEventArgs e)
+        private void AddNewLine_Click_Up(object sender, RoutedEventArgs e)
         {
-            LrcLinePanel.AddNewLine(MediaPlayer.Position);
+            LrcLinePanel.AddNewLineUp(MediaPlayer.Position);
+        }
+
+        /// <summary>
+        /// 添加新行
+        /// </summary>
+        private void AddNewLine_Click_Down(object sender, RoutedEventArgs e)
+        {
+            LrcLinePanel.AddNewLineDown(MediaPlayer.Position);
         }
 
         /// <summary>
@@ -840,7 +861,7 @@ namespace LyricEditor
         {
             if (CurrentLrcPanel == LrcPanelType.LrcLinePanel)
             {
-                AddNewLine_Click(this, null);
+                AddNewLine_Click_Up(this, null);
             }
         }
 

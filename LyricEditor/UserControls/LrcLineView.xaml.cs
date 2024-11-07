@@ -182,6 +182,34 @@ namespace LyricEditor.UserControls
                 case Key.Delete:
                     DeleteLine();
                     break;
+                case Key.C:
+                    if (Keyboard.Modifiers == ModifierKeys.Control) CopySelectedItemsToClipboard();
+                    break;
+                case Key.V:
+                    if (Keyboard.Modifiers == ModifierKeys.Control) PasteClipboardToSelectedItems();
+                    break;
+            }
+        }
+
+        private void CopySelectedItemsToClipboard()
+        {
+            if (LrcLinePanel.SelectedItem != null && LrcLinePanel.SelectedItems.Count == 1)
+            {
+                LrcLine line = LrcLinePanel.SelectedItem as LrcLine;
+
+                string copiedText = line.LrcText;
+
+                // 将文本复制到剪贴板
+                Clipboard.SetText(copiedText);
+                MessageBox.Show("复制内容:\n" + copiedText, "复制成功", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void PasteClipboardToSelectedItems()
+        {
+            if (LrcLinePanel.SelectedItem != null && LrcLinePanel.SelectedItems.Count == 1)
+            {
+                CurrentLrcText.Text = Clipboard.GetText();
             }
         }
 
@@ -217,18 +245,19 @@ namespace LyricEditor.UserControls
             LrcManager.Instance.LrcList[index].LrcTime = time;
             ((LrcLine)LrcLinePanel.Items[index]).LrcTime = time;
 
+            RefreshLrcPanel();
+
             // 根据是否到达最后一行来设定下一个选中行
             if (!ReachEnd)
             {
                 SelectedIndex++;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[index + 10 < LrcLinePanel.Items.Count ? index + 10 : SelectedIndex]);
             }
             else
             {
                 SelectedIndex = -1;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.SelectedItem);
             }
-
-            RefreshLrcPanel();
-            LrcLinePanel.ScrollIntoView(LrcLinePanel.SelectedItem);
         }
 
         public void ResetAllTime() => LrcManager.Instance.ResetAllTime(LrcLinePanel);
@@ -239,7 +268,9 @@ namespace LyricEditor.UserControls
 
         public void Redo() => LrcManager.Instance.Redo(LrcLinePanel);
 
-        public void AddNewLine(TimeSpan time) => LrcManager.Instance.AddNewLine(LrcLinePanel, time);
+        public void AddNewLineUp(TimeSpan time) => LrcManager.Instance.AddNewLineUp(LrcLinePanel, time);
+
+        public void AddNewLineDown(TimeSpan time) => LrcManager.Instance.AddNewLineDown(LrcLinePanel, time);
 
         public void DeleteLine() => LrcManager.Instance.DeleteLine(LrcLinePanel);
 

@@ -249,7 +249,18 @@ namespace LyricEditor.Lyric
         /// <summary>
         /// 添加新行
         /// </summary>
-        public void AddNewLine(ListView list, TimeSpan time)
+        public void AddNewLineUp(ListView list, TimeSpan time)
+        {
+            int index = list.SelectedIndex;
+            AddHistory(index);
+            LrcList.Insert(index, new LrcLine(time));
+            UpdateLrcList(list, index);
+        }
+
+        /// <summary>
+        /// 添加新行
+        /// </summary>
+        public void AddNewLineDown(ListView list, TimeSpan time)
         {
             int index = list.SelectedIndex;
             AddHistory(index);
