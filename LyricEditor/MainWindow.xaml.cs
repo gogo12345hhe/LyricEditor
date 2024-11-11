@@ -44,7 +44,7 @@ namespace LyricEditor
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
 
-            ImportMedia("D:\\C#\\LyricEditor\\卓依婷 - 童年.mp3");
+            //ImportMedia("D:\\C#\\LyricEditor\\卓依婷 - 童年.mp3");
         }
 
         #region 成员变量
@@ -231,6 +231,11 @@ namespace LyricEditor
         /// </summary>
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            if (Application.Current.Properties["arg1"] != null)
+            {
+                ImportMedia(Application.Current.Properties["arg1"].ToString());
+            }
+
             #region 读取配置
 
             if (!File.Exists(configPath))

@@ -191,6 +191,21 @@ namespace LyricEditor.UserControls
             }
         }
 
+        private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            DeleteLine();
+        }
+
+        private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            CopySelectedItemsToClipboard();
+        }
+
+        private void PasteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            PasteClipboardToSelectedItems();
+        }
+
         private void CopySelectedItemsToClipboard()
         {
             if (LrcLinePanel.SelectedItem != null && LrcLinePanel.SelectedItems.Count == 1)
@@ -201,7 +216,6 @@ namespace LyricEditor.UserControls
 
                 // 将文本复制到剪贴板
                 Clipboard.SetText(copiedText);
-                MessageBox.Show("复制内容:\n" + copiedText, "复制成功", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -277,5 +291,7 @@ namespace LyricEditor.UserControls
         public void MoveUp() => LrcManager.Instance.MoveUp(LrcLinePanel);
 
         public void MoveDown() => LrcManager.Instance.MoveDown(LrcLinePanel);
+
+
     }
 }

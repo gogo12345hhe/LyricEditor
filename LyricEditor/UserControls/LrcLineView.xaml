@@ -24,6 +24,15 @@
                   KeyUp="LrcLinePanel_KeyUp"
                   FontFamily="{StaticResource LyricFont}"
                   SelectionChanged="LrcLinePanel_SelectionChanged">
+
+            <ListView.Resources>
+                <ContextMenu x:Key="ListViewItemContextMenu">
+                    <MenuItem Header="删除" Click="DeleteMenuItem_Click"/>
+                    <MenuItem Header="复制" Click="CopyMenuItem_Click"/>
+                    <MenuItem Header="粘贴" Click="PasteMenuItem_Click"/>
+                </ContextMenu>
+            </ListView.Resources>
+            
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="Template">
@@ -61,6 +70,7 @@
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
+                    <Setter Property="ContextMenu" Value="{StaticResource ListViewItemContextMenu}"/>
                 </Style>
             </ListView.ItemContainerStyle>
             
