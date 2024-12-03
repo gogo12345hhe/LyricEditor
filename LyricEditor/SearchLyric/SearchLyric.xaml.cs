@@ -1,6 +1,4 @@
 ﻿using LyricEditor.Lyric;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -8,6 +6,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace LyricEditor
 {
@@ -56,17 +56,16 @@ namespace LyricEditor
 
                 if (source == "网易云音乐")
                 {
-                    JToken dataSongList = JsonConvert.DeserializeObject<JObject>(response.Content)["result"]["songs"];
+                    JsonArray dataSongList = JsonSerializer.Deserialize<JsonObject>(response.Content)["result"]["songs"].AsArray();
                     if (dataSongList != null)
                     {
-                        foreach (JToken song in dataSongList)
+                        foreach (JsonNode song in dataSongList)
                         {
                             string songMid = song["id"].ToString();
                             string songName = song["name"].ToString();
                             if (!songName.Contains(key.Split(' ')[0])) continue;
                             string albumName = song["album"]["name"].ToString();
-                            var singer = string.Join(";", song["artists"].Select(x => x["name"].ToString()));
-                            //if (!singer.Contains(key.Split(' ')[1])) continue;
+                            var singer = string.Join(";", song["artists"].AsArray().Select(x => x["name"].ToString()));
 
                             _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
                         }
@@ -74,15 +73,15 @@ namespace LyricEditor
                 }
                 else if (source == "QQ音乐")
                 {
-                    JToken dataSongList = JsonConvert.DeserializeObject<JObject>(response.Content)["data"]["song"]["list"];
-                    foreach (JToken song in dataSongList)
+                    JsonArray dataSongList = JsonSerializer.Deserialize<JsonObject>(response.Content)["data"]["song"]["list"].AsArray();
+                    foreach (JsonNode song in dataSongList)
                     {
                         string songMid = song["songmid"].ToString();
                         if (songMid == "") continue;
                         string songName = song["songname"].ToString();
                         if (!songName.Contains(key.Split(' ')[0])) continue;
                         string albumName = song["albumname"].ToString();
-                        string singer = string.Join(";", song["singer"].Select(x => x["name"].ToString()));
+                        string singer = string.Join(";", song["singer"].AsArray().Select(x => x["name"].ToString()));
                         //if (!singer.Contains(key.Split(' ')[1])) continue;
 
                         _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
@@ -105,20 +104,21 @@ namespace LyricEditor
             {
                 RestResponse response = client.Execute(request);
 
-                if(JsonConvert.DeserializeObject<JObject>(response.Content)["code"].ToString() == "200")
+                JsonObject js = JsonSerializer.Deserialize<JsonObject>(response.Content);
+                if (js["code"].ToString() == "200")
                 {
-                    lyric = JsonConvert.DeserializeObject<JObject>(response.Content)["lrc"]["lyric"].ToString();
+                    lyric = js["lrc"]["lyric"].ToString();
                 }
-
             }
             else if (source == "QQ音乐")
             {
                 request.AddHeader("Referer", "https://y.qq.com/portal/player.html");
                 RestResponse response = client.Execute(request);
 
-                if (JsonConvert.DeserializeObject<JObject>(response.Content)["code"].ToString() == "0")
+                JsonObject js = JsonSerializer.Deserialize<JsonObject>(response.Content);
+                if (js["code"].ToString() == "0")
                 {
-                    lyric = JsonConvert.DeserializeObject<JObject>(response.Content)["lyric"].ToString();
+                    lyric = js["lyric"].ToString();
                 }
             }
 
@@ -136,7 +136,16 @@ namespace LyricEditor
 
             void SongInfoList_Add(SongInfo info) => Dispatcher.Invoke(() => songInfoList.Add(info));
 
-            await Task.Run(() => Serach(keyword, Set_SearchPB_Value, SongInfoList_Add));
+            try
+            {
+                await Task.Run(() => Serach(keyword, Set_SearchPB_Value, SongInfoList_Add));
+            }
+            catch
+            {
+                e.Handled = true;
+                Set_SearchPB_Value(0);
+                MessageBox.Show("获取歌曲信息错误");
+            }
         }
 
         private void OnListViewItemDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)

@@ -10,8 +10,8 @@ namespace LyricEditor.Utils
         /// <summary>
         /// 支持的音乐文件格式
         /// </summary>
-        public static HashSet<string> MediaExtensions { get; } = new HashSet<string>
-        {
+        public static HashSet<string> MediaExtensions { get; } =
+        [
             ".mp3",
             ".wav",
             ".3gp",
@@ -22,12 +22,12 @@ namespace LyricEditor.Utils
             ".aac",
             ".flac",
             ".m4a",
-        };
+        ];
 
         /// <summary>
         /// 支持的歌词文件后缀
         /// </summary>
-        public static HashSet<string> LyricExtensions { get; } = new HashSet<string> { ".lrc", ".txt" };
+        public static HashSet<string> LyricExtensions { get; } = [".lrc", ".txt"];
 
         public const string TempFileName = "temp.txt";
 
@@ -36,11 +36,11 @@ namespace LyricEditor.Utils
         /// </summary>
         public static Encoding GetEncoding(string filename)
         {
-            var bytes = File.ReadAllBytes(filename);
-            var cdet = new CharsetDetector();
+            byte[] bytes = File.ReadAllBytes(filename);
+            CharsetDetector cdet = new();
             cdet.Feed(bytes, 0, bytes.Length);
             cdet.DataEnd();
-            var encoding = cdet.Charset;
+            string encoding = cdet.Charset;
             return Encoding.GetEncoding(encoding);
         }
     }

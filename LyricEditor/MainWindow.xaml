@@ -32,7 +32,7 @@
         </ResourceDictionary>
     </Window.Resources>
     <Window.InputBindings>
-        <KeyBinding Command="{StaticResource SetTimeShortcut}" Gesture="F5" />
+        <KeyBinding Command="{StaticResource SetTimeShortcut}" Gesture="F3" />
         <KeyBinding Command="{StaticResource HelpShortcut}" Gesture="F1" />
         <KeyBinding Command="{StaticResource PlayShortcut}" Gesture="Ctrl+P" />
         <KeyBinding Command="{StaticResource UndoShortcut}" Gesture="Ctrl+Z" />
@@ -381,7 +381,7 @@
             </StackPanel.Resources>
             <Button Name="FlagButton"
                     Margin="0,4,0,10"
-                    ToolTip="将当前播放位置应用到选中的歌词行（F5）"
+                    ToolTip="将当前播放位置应用到选中的歌词行（F3）"
                     Click="SetTime_Click">
                 <Image Source="Icons/ToolButtonIcons/Flag-red.png" />
             </Button>

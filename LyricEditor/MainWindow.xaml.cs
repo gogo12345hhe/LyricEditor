@@ -241,12 +241,12 @@ namespace LyricEditor
             if (!File.Exists(configPath))
             {
                 if (!Directory.Exists(Path.GetDirectoryName(configPath))) { Directory.CreateDirectory(Path.GetDirectoryName(configPath)); }
-                Stream stream = Application.GetResourceStream(new Uri("App.config", UriKind.Relative)).Stream;
+                Stream stream = Application.GetResourceStream(new Uri("Appp.config", UriKind.Relative)).Stream;
                 using FileStream sw = File.Create(configPath);
                 stream.CopyTo(sw);
             }
 
-            XmlDocument xmlDocument = new XmlDocument();
+            XmlDocument xmlDocument = new();
             xmlDocument.Load(configPath);
 
             XmlElement appSettings = xmlDocument["configuration"]["appSettings"];

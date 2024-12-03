@@ -23,15 +23,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="App.config" />
+    <None Remove="Appp.config" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="z440.atl.core" Version="6.7.0" />
+    <PackageReference Include="z440.atl.core" Version="6.8.0" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="App.config" />
+    <Resource Include="Appp.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Settings.Designer.cs">
