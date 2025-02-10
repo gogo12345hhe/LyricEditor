@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace LyricEditor
 {
@@ -61,13 +61,17 @@ namespace LyricEditor
                     {
                         foreach (JsonNode song in dataSongList)
                         {
-                            string songMid = song["id"].ToString();
-                            string songName = song["name"].ToString();
-                            if (!songName.Contains(key.Split(' ')[0])) continue;
-                            string albumName = song["album"]["name"].ToString();
-                            var singer = string.Join(";", song["artists"].AsArray().Select(x => x["name"].ToString()));
+                            try
+                            {
+                                string songMid = song["id"].ToString();
+                                string songName = song["name"].ToString();
+                                if (!songName.Contains(key.Split(' ')[0])) continue;
+                                string albumName = song["album"]["name"].ToString();
+                                var singer = string.Join(";", song["artists"].AsArray().Select(x => x["name"].ToString()));
 
-                            _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                                _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                            }
+                            catch { }
                         }
                     }
                 }
@@ -76,15 +80,19 @@ namespace LyricEditor
                     JsonArray dataSongList = JsonSerializer.Deserialize<JsonObject>(response.Content)["data"]["song"]["list"].AsArray();
                     foreach (JsonNode song in dataSongList)
                     {
-                        string songMid = song["songmid"].ToString();
-                        if (songMid == "") continue;
-                        string songName = song["songname"].ToString();
-                        if (!songName.Contains(key.Split(' ')[0])) continue;
-                        string albumName = song["albumname"].ToString();
-                        string singer = string.Join(";", song["singer"].AsArray().Select(x => x["name"].ToString()));
-                        //if (!singer.Contains(key.Split(' ')[1])) continue;
+                        try
+                        {
+                            string songMid = song["songmid"].ToString();
+                            if (songMid == "") continue;
+                            string songName = song["songname"].ToString();
+                            if (!songName.Contains(key.Split(' ')[0])) continue;
+                            string albumName = song["albumname"].ToString();
+                            string singer = string.Join(";", song["singer"].AsArray().Select(x => x["name"].ToString()));
+                            //if (!singer.Contains(key.Split(' ')[1])) continue;
 
-                        _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                            _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                        }
+                        catch { }
                     }
                 }
                 _Set_SearchPB_Value(pbval += 1);

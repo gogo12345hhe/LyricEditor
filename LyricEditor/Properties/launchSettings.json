@@ -1,8 +1,7 @@
 {
   "profiles": {
     "LyricEditor": {
-      "commandName": "Project",
-      "commandLineArgs": "\"D:\\C#\\LyricEditor\\LyricEditor\\bin\\x64\\Release\\publish\\卓依婷 - 童年.mp3\""
+      "commandName": "Project"
     }
   }
 }

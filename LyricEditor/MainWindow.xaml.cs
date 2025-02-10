@@ -44,7 +44,7 @@ namespace LyricEditor
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
 
-            //ImportMedia("D:\\C#\\LyricEditor\\卓依婷 - 童年.mp3");
+            //ImportMedia("D:\\C#\\LyricEditor\\方雅贤 - 遇到.flac");
         }
 
         #region 成员变量
@@ -840,7 +840,7 @@ namespace LyricEditor
         {
             var res = MessageBox.Show(Properties.Resources.Info, "相关信息", MessageBoxButton.OKCancel);
             if (res == MessageBoxResult.OK)
-                Process.Start("https://zhuanlan.zhihu.com/p/32588196");
+                Process.Start("explorer.exe", "https://zhuanlan.zhihu.com/p/32588196");
         }
 
         #endregion
