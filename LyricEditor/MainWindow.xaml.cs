@@ -5,6 +5,7 @@ using LyricEditor.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -16,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using System.Xml;
 using Forms = System.Windows.Forms;
+using Image = System.Windows.Controls.Image;
 
 namespace LyricEditor
 {
@@ -44,7 +46,7 @@ namespace LyricEditor
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
 
-            //ImportMedia("D:\\C#\\LyricEditor\\方雅贤 - 遇到.flac");
+            //ImportMedia("D:\\C#\\LyricEditor\\毛不易 - 消愁.mp3");
         }
 
         #region 成员变量
@@ -190,30 +192,45 @@ namespace LyricEditor
 
                 string performers = theFile.Artist;
                 PerformerBox.Text = performers;
-                Title = $"歌词编辑器 {performers} - {title}";
-
-                if (theFile.EmbeddedPictures.Count != 0)
-                {
-                    PictureInfo embeddedPictures = theFile.EmbeddedPictures[0];
-                    BitmapImage image = new();
-                    image.BeginInit();
-                    image.StreamSource = new MemoryStream(embeddedPictures.PictureData);
-                    image.EndInit();
-                    Cover.Source = image;
-                }
-                else
-                {
-                    Cover.Source = ResourceHelper.GetIcon("disc.png");
-                }
+                Title = $"歌词编辑器     {performers} - {title}";
 
                 string album = theFile.Album;
                 AlbumBox.Text = album;
 
-                if (theFile.AdditionalFields.TryGetValue("LYRICS", out string value))
+                ImportLyricFromTag(theFile);
+
+                try
                 {
-                    LrcManager.Instance.LoadFromText(value);
-                    UpdateLrcView();
+                    if (theFile.EmbeddedPictures.Count != 0)
+                    {
+                        System.Drawing.Image img = null;
+                        using (MemoryStream ms = new(theFile.EmbeddedPictures[0].PictureData))
+                            img = System.Drawing.Image.FromStream(ms);
+
+                        Bitmap image = new(img);
+
+                        MemoryStream stream = new();
+                        image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
+                        stream.Position = 0;
+                        BitmapImage bitmapImage = new();
+                        bitmapImage.BeginInit();
+                        bitmapImage.StreamSource = stream;
+                        bitmapImage.EndInit();
+
+                        Cover.Source = bitmapImage;
+
+                        img.Dispose();
+                    }
+                    else
+                    {
+                        Cover.Source = ResourceHelper.GetIcon("disc.png");
+                    }
                 }
+                catch
+                {
+                    Cover.Source = ResourceHelper.GetIcon("disc.png");
+                }
+
             }
             catch
             {
@@ -385,16 +402,25 @@ namespace LyricEditor
         }
 
         /// <summary>
-        /// 导入歌词文件
+        /// 标签导入歌词文件
         /// </summary>
         private void ImportLyricFromTag_Click(object sender, RoutedEventArgs e)
         {
             Track theFile = new(audioPath);
-            if (theFile.AdditionalFields.TryGetValue("LYRICS", out string value))
+            ImportLyricFromTag(theFile);
+        }
+
+        private void ImportLyricFromTag(Track file)
+        {
+            if (file.Lyrics.Count != 0)
             {
-                LrcManager.Instance.LoadFromText(value);
+                string lrc = file.Lyrics[0].FormatSynch().Trim('\n');
+                LrcManager.Instance.LoadFromText(lrc);
+                LrcManager.Instance.Sort();
                 UpdateLrcView();
-            }   
+
+                LrcLinePanel.LrcLinePanel.ScrollIntoView(LrcLinePanel.LrcLinePanel.Items[0]);
+            }
         }
 
         /// <summary>
@@ -428,8 +454,14 @@ namespace LyricEditor
         /// </summary>
         private void ExportLyricToTag_Click(object sender, RoutedEventArgs e)
         {
+            string lrc = LrcManager.Instance.ToString();
+            if (lrc == "") return;
+
             Track theFile = new(audioPath);
-            theFile.AdditionalFields["LYRICS"] = LrcManager.Instance.ToString();
+
+            theFile.Lyrics.Clear();
+
+            theFile.AdditionalFields["LYRICS"] = lrc;
             theFile.Save();
         }
 
@@ -841,6 +873,14 @@ namespace LyricEditor
             var res = MessageBox.Show(Properties.Resources.Info, "相关信息", MessageBoxButton.OKCancel);
             if (res == MessageBoxResult.OK)
                 Process.Start("explorer.exe", "https://zhuanlan.zhihu.com/p/32588196");
+        }
+
+        /// <summary>
+        /// 第一行添加标题
+        /// </summary>
+        private void Tit_Click(object sender, RoutedEventArgs e)
+        {
+            LrcLinePanel.AddTit($"{TitleBox.Text} - {PerformerBox.Text}");
         }
 
         #endregion

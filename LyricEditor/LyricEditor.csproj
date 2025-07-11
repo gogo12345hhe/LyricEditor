@@ -28,7 +28,7 @@
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="z440.atl.core" Version="6.8.0" />
+    <PackageReference Include="z440.atl.core" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="App.config" />

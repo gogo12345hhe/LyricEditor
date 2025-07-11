@@ -1,8 +1,9 @@
-﻿using System;
+﻿using LyricEditor.Lyric;
+using System;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using LyricEditor.Lyric;
 
 namespace LyricEditor.UserControls
 {
@@ -269,8 +270,8 @@ namespace LyricEditor.UserControls
             }
             else
             {
-                SelectedIndex = -1;
-                LrcLinePanel.ScrollIntoView(LrcLinePanel.SelectedItem);
+                //SelectedIndex = -1;
+                //LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[SelectedIndex]);
             }
         }
 
@@ -282,7 +283,16 @@ namespace LyricEditor.UserControls
 
         public void Redo() => LrcManager.Instance.Redo(LrcLinePanel);
 
-        public void AddNewLineUp(TimeSpan time) => LrcManager.Instance.AddNewLineUp(LrcLinePanel, time);
+        public void AddNewLineUp(TimeSpan time)
+        {
+            LrcManager.Instance.AddNewLineUp(LrcLinePanel, time);
+            int index = SelectedIndex;
+            if (!ReachEnd)
+            {
+                SelectedIndex++;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[index + 10 < LrcLinePanel.Items.Count ? index + 10 : SelectedIndex]);
+            }
+        }
 
         public void AddNewLineDown(TimeSpan time) => LrcManager.Instance.AddNewLineDown(LrcLinePanel, time);
 
@@ -292,6 +302,6 @@ namespace LyricEditor.UserControls
 
         public void MoveDown() => LrcManager.Instance.MoveDown(LrcLinePanel);
 
-
+        public void AddTit(string tt) => LrcManager.Instance.AddTit(LrcLinePanel, tt);
     }
 }

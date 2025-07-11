@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace LyricEditor.Lyric
 {
@@ -244,6 +245,17 @@ namespace LyricEditor.Lyric
                     line.LrcTime = TimeSpan.Zero;
             }
             UpdateLrcList(list);
+        }
+
+        /// <summary>
+        /// 第一行添加标题
+        /// </summary>
+        public void AddTit(ListView list, string tt)
+        {
+            int index = 0;
+            AddHistory(index);
+            LrcList.Insert(index, new LrcLine(new TimeSpan(0, 0, 0, 0, 0), tt));
+            UpdateLrcList(list, index);
         }
 
         /// <summary>

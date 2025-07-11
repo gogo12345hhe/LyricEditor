@@ -31,13 +31,13 @@ namespace LyricEditor
             mainWindow = _main;
         }
 
-        readonly Dictionary<string, string> 搜索歌曲 = new Dictionary<string, string>()
+        readonly Dictionary<string, string> 搜索歌曲 = new()
         {
             { "网易云音乐", "http://music.163.com/api/search/get/web?csrf_token=hlpretag=&hlposttag=&s={0}&type=1&offset=0&total=true&limit=10" },
             { "QQ音乐", "https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=1&n=10&w={0}&format=json" }
         };
 
-        readonly Dictionary<string, string> 搜索歌词 = new Dictionary<string, string>()
+        readonly Dictionary<string, string> 搜索歌词 = new()
         {
             { "网易云音乐", "https://music.163.com/api/song/lyric?id={0}&lv=1&kv=1&tv=-1" },
             { "QQ音乐", "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid={0}&format=json&nobase64=1" }
@@ -53,6 +53,11 @@ namespace LyricEditor
                 var client = new RestClient();
                 var request = new RestRequest(string.Format(搜索歌曲[source], key), Method.Get);
                 RestResponse response = client.Execute(request);
+
+                _Set_SearchPB_Value(pbval += 1);
+
+                if (response.StatusCode != System.Net.HttpStatusCode.OK) continue;
+                if (response.ContentType.Split('/')[0] != "application") continue;
 
                 if (source == "网易云音乐")
                 {
@@ -95,7 +100,6 @@ namespace LyricEditor
                         catch { }
                     }
                 }
-                _Set_SearchPB_Value(pbval += 1);
             }
 
             _Set_SearchPB_Value(pbval += 1);

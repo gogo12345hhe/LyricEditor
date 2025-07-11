@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:LyricEditor"
         xmlns:uc="clr-namespace:LyricEditor.UserControls"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        Width="800"
-        Height="600"
+        Width="1000"
+        Height="800"
         MinWidth="800"
         MinHeight="600"
         Title="歌词制作器"
@@ -18,6 +18,7 @@
         Drop="Window_Drop"
         DragEnter="Window_DragEnter"
         AllowDrop="True"
+        UseLayoutRounding="True"
         mc:Ignorable="d">
     <Window.Resources>
         <ResourceDictionary>
@@ -32,7 +33,7 @@
         </ResourceDictionary>
     </Window.Resources>
     <Window.InputBindings>
-        <KeyBinding Command="{StaticResource SetTimeShortcut}" Gesture="F3" />
+        <KeyBinding Command="{StaticResource SetTimeShortcut}" Key="F" />
         <KeyBinding Command="{StaticResource HelpShortcut}" Gesture="F1" />
         <KeyBinding Command="{StaticResource PlayShortcut}" Gesture="Ctrl+P" />
         <KeyBinding Command="{StaticResource UndoShortcut}" Gesture="Ctrl+Z" />
@@ -50,7 +51,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150" />
+            <ColumnDefinition Width="300" />
             <ColumnDefinition Width="3*" />
             <ColumnDefinition Width="35" />
         </Grid.ColumnDefinitions>
@@ -202,11 +203,11 @@
                     <DropShadowEffect x:Name="PlayButtonPanelDropShadow" ShadowDepth="0" />
                 </Border.Effect>
                 <StackPanel>
-                    <Grid HorizontalAlignment="Center">
+                    <Grid Width="190">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="42" />
-                            <ColumnDefinition Width="42" />
-                            <ColumnDefinition Width="42" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition />
@@ -294,7 +295,7 @@
                                 <Setter Property="RenderOptions.BitmapScalingMode" Value="Fant" />
                             </Style>
                         </Grid.Resources>
-                        
+
                         <Image Source="Icons/MediaButtonIcons/volume.png" />
                         <Slider Name="VolumeSlider"
                                 Grid.Column="1"
@@ -303,7 +304,7 @@
                                 Maximum="1"
                                 Value="{Binding ElementName=MediaPlayer, Path=Volume, Mode=TwoWay}" />
                         <TextBlock Grid.Column="2" Text="{Binding ElementName=VolumeSlider, Path=Value, StringFormat={}{0:N1}}" />
-                        
+
                         <Image Grid.Row="1" Source="Icons/MediaButtonIcons/clock.png" />
                         <Slider Name="SpeedSlider"
                                 Grid.Row="1"
@@ -381,7 +382,7 @@
             </StackPanel.Resources>
             <Button Name="FlagButton"
                     Margin="0,4,0,10"
-                    ToolTip="将当前播放位置应用到选中的歌词行（F3）"
+                    ToolTip="将当前播放位置应用到选中的歌词行（F）"
                     Click="SetTime_Click">
                 <Image Source="Icons/ToolButtonIcons/Flag-red.png" />
             </Button>
@@ -462,6 +463,13 @@
                     <Image Margin="1" Source="Icons/ToolButtonIcons/Navigate-down.png" />
                 </Button>
             </StackPanel>
+            <Separator />
+            <Button Margin="0,0,0,10" Click="Tit_Click">
+                <Button.ToolTip>
+                    第一行添加标题
+                </Button.ToolTip>
+                <Image Source="Icons/ToolButtonIcons/tit.png" />
+            </Button>
         </StackPanel>
 
         <Button Grid.Row="1"
