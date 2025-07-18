@@ -2,6 +2,9 @@
 using LyricEditor.Lyric;
 using LyricEditor.UserControls;
 using LyricEditor.Utils;
+using NAudio.Flac;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,8 +49,17 @@ namespace LyricEditor
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
             Timer.Start();
 
+            mediaPlayer.PlaybackStopped += MediaPlayer_PlaybackStopped;
+
             //ImportMedia("D:\\C#\\LyricEditor\\毛不易 - 消愁.mp3");
         }
+
+        //public MediaPlayer mediaPlayer = new MediaPlayer();
+        //public FlacReader flacReader = null;
+        //public AudioFileReader audioFileReader = null;
+        public dynamic audioFile = null;
+        private SampleChannel sampleChannel;
+        public IWavePlayer mediaPlayer = new WaveOutEvent();
 
         #region 成员变量
 
@@ -64,7 +76,7 @@ namespace LyricEditor
         public TimeSpan ShortTimeShift { get; private set; } = new TimeSpan(0, 0, 2);
         public TimeSpan LongTimeShift { get; private set; } = new TimeSpan(0, 0, 5);
 
-        private string audioPath;
+        public string audioPath;
         private string lrcPath;
 
         private string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -87,13 +99,13 @@ namespace LyricEditor
             if (!IsMediaAvailable)
                 return;
 
-            var current = MediaPlayer.Position;
+            var current = audioFile.CurrentTime;
             CurrentTimeText.Text = $"{current.Minutes:00}:{current.Seconds:00}";
 
             TimeBackground.Value =
-                MediaPlayer.Position.TotalSeconds
-                / MediaPlayer.NaturalDuration.TimeSpan.TotalSeconds;
-            CurrentLrcText.Text = LrcManager.Instance.GetNearestLrc(MediaPlayer.Position);
+                audioFile.CurrentTime.TotalMilliseconds
+                / audioFile.TotalTime.TotalMilliseconds;
+            CurrentLrcText.Text = LrcManager.Instance.GetNearestLrc(audioFile.CurrentTime);
         }
 
         #endregion
@@ -104,10 +116,10 @@ namespace LyricEditor
         {
             get
             {
-                if (MediaPlayer.Source is null)
+                if (audioFile is null || audioFile.Length <= 0)
                     return false;
                 else
-                    return MediaPlayer.HasAudio && MediaPlayer.NaturalDuration.HasTimeSpan;
+                    return true;
             }
         }
 
@@ -116,7 +128,7 @@ namespace LyricEditor
             if (!IsMediaAvailable)
                 return;
 
-            MediaPlayer.Play();
+            mediaPlayer.Play();
 
             PlayButton.Tag = true;
 
@@ -128,7 +140,7 @@ namespace LyricEditor
             if (!IsMediaAvailable)
                 return;
 
-            MediaPlayer.Pause();
+            mediaPlayer.Pause();
 
             PlayButton.Tag = false;
 
@@ -140,7 +152,9 @@ namespace LyricEditor
             if (!IsMediaAvailable)
                 return;
 
-            MediaPlayer.Stop();
+            mediaPlayer.Stop();
+
+            if (audioFile != null) audioFile.Position = 0;
 
             PlayButton.Tag = false;
 
@@ -176,13 +190,22 @@ namespace LyricEditor
 
             try
             {
+                audioFile = null;
+
                 string tmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + Path.GetExtension(filename));
                 tmpList.Add(tmpPath);
-                byte[] bytes = File.ReadAllBytes(filename);
-                File.WriteAllBytes(tmpPath, bytes);
 
-                MediaPlayer.Source = new Uri(tmpPath);
-                MediaPlayer.Stop();
+                File.Copy(filename, tmpPath, true);
+
+                if (Path.GetExtension(tmpPath) == ".mp3")
+                    audioFile = new AudioFileReader(tmpPath);
+                else if (Path.GetExtension(tmpPath) == ".flac")
+                    audioFile = new FlacReader(tmpPath);
+
+                sampleChannel = new SampleChannel(audioFile, true) { Volume = 0.3f };
+                mediaPlayer.Init(sampleChannel);
+
+                mediaPlayer.Stop();
 
                 Track theFile = new(tmpPath);
                 string title = theFile.Title;
@@ -198,6 +221,8 @@ namespace LyricEditor
                 AlbumBox.Text = album;
 
                 ImportLyricFromTag(theFile);
+
+                MediaPlayer_MediaOpened();
 
                 try
                 {
@@ -237,6 +262,25 @@ namespace LyricEditor
                 Cover.Source = ResourceHelper.GetIcon("disc.png");
                 audioPath = string.Empty;
             }
+        }
+
+        /// <summary>
+        /// 播放结束后停止
+        /// </summary>
+        private void MediaPlayer_PlaybackStopped(object sender, StoppedEventArgs e)
+        {
+            Stop();
+        }
+
+        /// <summary>
+        /// 打开媒体文件后，更新时间轴上的总时间
+        /// </summary>
+        private void MediaPlayer_MediaOpened()
+        {
+            var totalTime = audioFile.TotalTime;
+            TotalTimeText.Text = $"{totalTime.Minutes:00}:{totalTime.Seconds:00}";
+            CurrentTimeText.Text = "00:00";
+            Pause();
         }
 
         #endregion
@@ -316,11 +360,17 @@ namespace LyricEditor
         {
             Timer.Stop();
 
+            audioFile?.Dispose();
+            audioFile = null;
+            mediaPlayer?.Dispose();
+
+            if (searchLyricWindow != null && searchLyricWindow.IsLoaded) searchLyricWindow.Close();
+
             //清理临时文件
             foreach (string tmp in tmpList) File.Delete(tmp);
 
             // 保存配置文件
-            XmlDocument xmlDocument = new XmlDocument();
+            XmlDocument xmlDocument = new();
             xmlDocument.Load(configPath);
 
             XmlElement appSettings = xmlDocument["configuration"]["appSettings"];
@@ -410,11 +460,27 @@ namespace LyricEditor
             ImportLyricFromTag(theFile);
         }
 
+        /// <summary>
+        /// 标签导入歌词文件
+        /// </summary>
         private void ImportLyricFromTag(Track file)
         {
+            string lrc = "";
+
             if (file.Lyrics.Count != 0)
             {
-                string lrc = file.Lyrics[0].FormatSynch().Trim('\n');
+                if (file.Lyrics[0].SynchronizedLyrics.Count != 0)
+                    lrc = file.Lyrics[0].FormatSynch().Trim('\n');
+                else
+                    lrc = file.Lyrics[0].UnsynchronizedLyrics.Trim('\n');
+            }
+            else if (file.AdditionalFields.TryGetValue("LYRICS", out string value))
+            {
+                lrc = value.Trim('\n');
+            }
+
+            if (lrc != "")
+            {
                 LrcManager.Instance.LoadFromText(lrc);
                 LrcManager.Instance.Sort();
                 UpdateLrcView();
@@ -459,7 +525,7 @@ namespace LyricEditor
 
             Track theFile = new(audioPath);
 
-            theFile.Lyrics.Clear();
+            theFile.Lyrics = null;
 
             theFile.AdditionalFields["LYRICS"] = lrc;
             theFile.Save();
@@ -499,17 +565,6 @@ namespace LyricEditor
                     }
                     break;
             }
-        }
-
-        /// <summary>
-        /// 打开媒体文件后，更新时间轴上的总时间
-        /// </summary>
-        private void MediaPlayer_MediaOpened(object sender, RoutedEventArgs e)
-        {
-            var totalTime = MediaPlayer.NaturalDuration.TimeSpan;
-            TotalTimeText.Text = $"{totalTime.Minutes:00}:{totalTime.Seconds:00}";
-            CurrentTimeText.Text = "00:00";
-            Pause();
         }
 
         /// <summary>
@@ -678,16 +733,16 @@ namespace LyricEditor
             switch (((Button)sender).Name)
             {
                 case "ShortShiftLeft":
-                    MediaPlayer.Position -= ShortTimeShift;
+                    audioFile.CurrentTime -= ShortTimeShift;
                     break;
                 case "ShortShiftRight":
-                    MediaPlayer.Position += ShortTimeShift;
+                    audioFile.CurrentTime += ShortTimeShift;
                     break;
                 case "LongShiftLeft":
-                    MediaPlayer.Position -= LongTimeShift;
+                    audioFile.CurrentTime -= LongTimeShift;
                     break;
                 case "LongShiftRight":
-                    MediaPlayer.Position += LongTimeShift;
+                    audioFile.CurrentTime += LongTimeShift;
                     break;
             }
         }
@@ -697,11 +752,12 @@ namespace LyricEditor
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            MediaPlayer.SpeedRatio = e.NewValue;
-        }
+        //private void SpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        //{
+        //    mediaPlayer.SpeedRatio = e.NewValue;
+        //}
 
+        SearchLyric searchLyricWindow;
         /// <summary>
         /// 搜索歌词
         /// </summary>
@@ -709,15 +765,15 @@ namespace LyricEditor
         /// <param name="e"></param>
         private void SerachLyric_Click(object sender, RoutedEventArgs e)
         {
-            if (MediaPlayer.Source is null) return;
+            //if (audioFile is null) return;
 
             string performers = PerformerBox.Text;
             string title = TitleBox.Text;
 
-            SearchLyric searchLyric = new(this, title, performers);
+            searchLyricWindow = new(this, title, performers);
 
-            searchLyric.Show();
-            searchLyric.Search_Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            searchLyricWindow.Show();
+            searchLyricWindow.Search_Button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         }
 
         /// <summary>
@@ -732,12 +788,12 @@ namespace LyricEditor
             double percent = current / TimeClickBar.ActualWidth;
             TimeBackground.Value = percent;
 
-            MediaPlayer.Position = new TimeSpan(
+            audioFile.CurrentTime = new TimeSpan(
                 0,
                 0,
                 0,
                 0,
-                (int)(MediaPlayer.NaturalDuration.TimeSpan.TotalMilliseconds * percent)
+                (int)(audioFile.TotalTime.TotalMilliseconds * percent)
             );
         }
 
@@ -785,7 +841,7 @@ namespace LyricEditor
             if (CurrentLrcPanel != LrcPanelType.LrcLinePanel)
                 return;
 
-            LrcLinePanel.SetCurrentLineTime(MediaPlayer.Position);
+            LrcLinePanel.SetCurrentLineTime(audioFile.CurrentTime);
         }
 
         /// <summary>
@@ -793,7 +849,7 @@ namespace LyricEditor
         /// </summary>
         private void AddNewLine_Click_Up(object sender, RoutedEventArgs e)
         {
-            LrcLinePanel.AddNewLineUp(MediaPlayer.Position);
+            LrcLinePanel.AddNewLineUp(audioFile.CurrentTime);
         }
 
         /// <summary>
@@ -801,7 +857,7 @@ namespace LyricEditor
         /// </summary>
         private void AddNewLine_Click_Down(object sender, RoutedEventArgs e)
         {
-            LrcLinePanel.AddNewLineDown(MediaPlayer.Position);
+            LrcLinePanel.AddNewLineDown(audioFile.CurrentTime);
         }
 
         /// <summary>
@@ -912,5 +968,10 @@ namespace LyricEditor
 
         #endregion
 
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            float newVolume = (float)e.NewValue;
+            if (sampleChannel != null) sampleChannel.Volume = newVolume;
+        }
     }
 }

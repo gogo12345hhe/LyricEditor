@@ -26,9 +26,11 @@
     <None Remove="Appp.config" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="BunLabs.NAudio.Flac" Version="2.0.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
-    <PackageReference Include="z440.atl.core" Version="7.0.0" />
+    <PackageReference Include="z440.atl.core" Version="7.1.0" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="App.config" />
@@ -45,6 +47,28 @@
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.32.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.64.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.32.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.64.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.64.dll">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="C:\Users\L\.nuget\packages\naudio.lame\2.1.0\build\libmp3lame.32.dll">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

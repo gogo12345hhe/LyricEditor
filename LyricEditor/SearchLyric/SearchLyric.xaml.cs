@@ -3,6 +3,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -72,9 +73,18 @@ namespace LyricEditor
                                 string songName = song["name"].ToString();
                                 if (!songName.Contains(key.Split(' ')[0])) continue;
                                 string albumName = song["album"]["name"].ToString();
+                                string albumId = song["album"]["id"].ToString();
                                 var singer = string.Join(";", song["artists"].AsArray().Select(x => x["name"].ToString()));
 
-                                _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                                _SongInfoList_Add(new SongInfo()
+                                {
+                                    SongMid = songMid,
+                                    SongName = songName,
+                                    AblumName = albumName,
+                                    AblumId = albumId,
+                                    Singer = singer,
+                                    Source = source
+                                });
                             }
                             catch { }
                         }
@@ -92,10 +102,19 @@ namespace LyricEditor
                             string songName = song["songname"].ToString();
                             if (!songName.Contains(key.Split(' ')[0])) continue;
                             string albumName = song["albumname"].ToString();
+                            string albumMid = song["albummid"].ToString();
                             string singer = string.Join(";", song["singer"].AsArray().Select(x => x["name"].ToString()));
                             //if (!singer.Contains(key.Split(' ')[1])) continue;
 
-                            _SongInfoList_Add(new SongInfo() { SongMid = songMid, SongName = songName, AblumName = albumName, Singer = singer, Source = source });
+                            _SongInfoList_Add(new SongInfo()
+                            {
+                                SongMid = songMid,
+                                SongName = songName,
+                                AblumName = albumName,
+                                AblumId = albumMid,
+                                Singer = singer,
+                                Source = source
+                            });
                         }
                         catch { }
                     }
@@ -137,6 +156,56 @@ namespace LyricEditor
             return lyric;
         }
 
+        private void GetCover(SongInfo song)
+        {
+            string source = song.Source;
+            string songmid = song.SongMid;
+            string albumid = song.AblumId;
+
+            var client = new RestClient();
+
+            byte[] cover = null;
+
+            if (source == "网易云音乐")
+            {
+                var request = new RestRequest(string.Format("https://music.163.com/api/song/detail?ids=[{0}]", songmid), Method.Get);
+
+                RestResponse response = client.Execute(request);
+
+                JsonObject js = JsonSerializer.Deserialize<JsonObject>(response.Content);
+                if (js["code"].ToString() == "200")
+                {
+                    JsonNode jn = js["songs"][0];
+                    string picurl = jn["album"]["blurPicUrl"].ToString();
+                    if (picurl != "")
+                    {
+                        var request2 = new RestRequest(picurl, Method.Get);
+                        RestResponse response2 = client.Execute(request2);
+                        if (response2.IsSuccessful)
+                        {
+                            cover = response2.RawBytes;
+                        }
+                    }
+                }
+            }
+            else if (source == "QQ音乐")
+            {
+                var request = new RestRequest(string.Format("http://y.gtimg.cn/music/photo_new/T002R800x800M000{0}.jpg", albumid), Method.Get);
+
+                RestResponse response = client.Execute(request);
+
+                if (response.StatusCode.ToString() == "OK")
+                {
+                    cover = response.RawBytes;
+                }
+            }
+
+            if (cover != null)
+            {
+                File.WriteAllBytes(Path.ChangeExtension(mainWindow.audioPath, ".jpg"), cover);
+            }
+        }
+
         public async void Search_Click(object sender, RoutedEventArgs e)
         {
             string keyword = $"{title.Text} {artist.Text}";
@@ -164,10 +233,17 @@ namespace LyricEditor
         {
             SongInfo item = 搜索结果List.SelectedItem as SongInfo;
 
-            string lyric = GetLyric(item.SongMid, item.Source);
+            string lyric = GetLyric(item.SongMid, item.Source).Trim('\n');
             LrcManager.Instance.LoadFromText(lyric);
 
             mainWindow.UpdateLrcViewInvoke();
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            SongInfo item = 搜索结果List.SelectedItem as SongInfo;
+
+            GetCover(item);
         }
     }
 }

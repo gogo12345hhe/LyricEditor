@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace LyricEditor.Lyric
 {
@@ -113,7 +114,9 @@ namespace LyricEditor.Lyric
         public static bool CheckMultiLine(string line)
         {
             // 指的是从左侧第二个字符开始找，如果仍然能够找到“[”，则认为包含超过一个时间框
-            if (line.TrimStart().IndexOf('[', 1) != -1) return true;
+
+            //if (line.TrimStart().IndexOf('[', s.IndexOf('[')) != -1) return true;
+            if (line.TrimStart().Count(c => c == '[') > 1) return true;
             else return false;
         }
         /// <summary>

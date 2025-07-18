@@ -35,7 +35,7 @@
     <Window.InputBindings>
         <KeyBinding Command="{StaticResource SetTimeShortcut}" Key="F" />
         <KeyBinding Command="{StaticResource HelpShortcut}" Gesture="F1" />
-        <KeyBinding Command="{StaticResource PlayShortcut}" Gesture="Ctrl+P" />
+        <KeyBinding Command="{StaticResource PlayShortcut}" Key="S" />
         <KeyBinding Command="{StaticResource UndoShortcut}" Gesture="Ctrl+Z" />
         <KeyBinding Command="{StaticResource RedoShortcut}" Gesture="Ctrl+Y" />
         <KeyBinding Command="{StaticResource InsertShortcut}" Gesture="Insert" />
@@ -166,11 +166,11 @@
         <!-- 左侧界面 -->
         <StackPanel Grid.Row="1" Margin="5,5,0,5">
             <!-- 播放器 -->
-            <MediaElement Name="MediaPlayer"
+            <!--<MediaElement Name="mediaPlayer"
                           Volume="0.3"
                           Visibility="Collapsed"
                           LoadedBehavior="Manual"
-                          MediaOpened="MediaPlayer_MediaOpened" />
+                          MediaOpened="MediaPlayer_MediaOpened" />-->
             <!-- 专辑封面 -->
             <Grid>
                 <Border Height="{Binding RelativeSource={RelativeSource Self}, Path=Width}"
@@ -224,7 +224,7 @@
                         </Button>
                         <Button Name="PlayButton"
                                 Grid.Column="1"
-                                ToolTip="播放/暂停"
+                                ToolTip="播放/暂停（S）"
                                 Click="PlayButton_Click">
                             <Button.Tag>
                                 <sys:Boolean>False</sys:Boolean>
@@ -279,8 +279,8 @@
                             <ColumnDefinition Width="18" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="30" ToolTip="音量" />
-                            <RowDefinition Height="30" ToolTip="播放速度" />
+                            <RowDefinition Height="60" ToolTip="音量" />
+                            <RowDefinition Height="0" ToolTip="播放速度" />
                         </Grid.RowDefinitions>
                         <Grid.Resources>
                             <Style TargetType="{x:Type TextBlock}">
@@ -302,11 +302,12 @@
                                 Style="{DynamicResource RoundToggleSlider}"
                                 TickFrequency="0.05"
                                 Maximum="1"
-                                Value="{Binding ElementName=MediaPlayer, Path=Volume, Mode=TwoWay}" />
+                                Value="0.3"
+                                ValueChanged="VolumeSlider_ValueChanged"/>
                         <TextBlock Grid.Column="2" Text="{Binding ElementName=VolumeSlider, Path=Value, StringFormat={}{0:N1}}" />
 
-                        <Image Grid.Row="1" Source="Icons/MediaButtonIcons/clock.png" />
-                        <Slider Name="SpeedSlider"
+                        <!--<Image Grid.Row="1" Source="Icons/MediaButtonIcons/clock.png" />-->
+                        <!--<Slider Name="SpeedSlider"
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Maximum="2"
@@ -314,8 +315,8 @@
                                 TickFrequency="0.25"
                                 Style="{DynamicResource RoundToggleSlider}"
                                 Value="1.0"
-                                ValueChanged="SpeedSlider_ValueChanged" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding ElementName=SpeedSlider, Path=Value, StringFormat={}{0:0.0}}" />
+                                ValueChanged="SpeedSlider_ValueChanged" />-->
+                        <!--<TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding ElementName=SpeedSlider, Path=Value, StringFormat={}{0:0.0}}" />-->
                     </Grid>
                 </StackPanel>
             </Border>

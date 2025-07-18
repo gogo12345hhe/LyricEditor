@@ -75,7 +75,7 @@ namespace LyricEditor.Lyric
                 int lineNumber = 1;
                 try
                 {
-                    foreach (var line in lines)
+                    foreach (string linel in lines)
                     {
                         // 在确认文本中包含时间标记的情况下，会忽略所有空行
                         //if (string.IsNullOrWhiteSpace(line))
@@ -83,6 +83,7 @@ namespace LyricEditor.Lyric
                         //    lineNumber++;
                         //    continue;
                         //}
+                        string line = linel.TrimStart('\uFEFF');
 
                         var matches = reTimeMark.Matches(line);
                         // 出现了类似 [00:00.000][00:01.000] 的包含多个时间信息的歌词行
@@ -265,7 +266,7 @@ namespace LyricEditor.Lyric
         {
             int index = list.SelectedIndex;
             AddHistory(index);
-            LrcList.Insert(index, new LrcLine(time));
+            LrcList.Insert(index == -1 ? 0 : index, new LrcLine(time));
             UpdateLrcList(list, index);
         }
 

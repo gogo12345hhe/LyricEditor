@@ -170,7 +170,8 @@ namespace LyricEditor.UserControls
             if (!line.LrcTime.HasValue)
                 return;
 
-            ((MainWindow)Application.Current.MainWindow).MediaPlayer.Position = line.LrcTime.Value;
+            //MainWindow.mediaPlayer.Position = line.LrcTime.Value;
+            ((MainWindow)Application.Current.MainWindow).audioFile.CurrentTime = line.LrcTime.Value;
         }
 
         /// <summary>
@@ -294,7 +295,16 @@ namespace LyricEditor.UserControls
             }
         }
 
-        public void AddNewLineDown(TimeSpan time) => LrcManager.Instance.AddNewLineDown(LrcLinePanel, time);
+        public void AddNewLineDown(TimeSpan time)
+        {
+            LrcManager.Instance.AddNewLineDown(LrcLinePanel, time);
+            int index = SelectedIndex;
+            if (!ReachEnd)
+            {
+                SelectedIndex++;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[index + 10 < LrcLinePanel.Items.Count ? index + 10 : SelectedIndex]);
+            }
+        }
 
         public void DeleteLine() => LrcManager.Instance.DeleteLine(LrcLinePanel);
 
