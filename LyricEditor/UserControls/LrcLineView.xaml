@@ -32,7 +32,7 @@
                     <MenuItem Header="粘贴" Click="PasteMenuItem_Click"/>
                 </ContextMenu>
             </ListView.Resources>
-            
+
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Setter Property="Template">
@@ -48,6 +48,10 @@
                                               SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
+                                    <!-- 鼠标悬停状态 -->
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="LightSkyBlue"/>
+                                    </Trigger>
                                     <!-- 选中状态 -->
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter TargetName="Bd" Property="Background" Value="LightBlue"/>
@@ -62,10 +66,6 @@
                                         <Setter TargetName="Bd" Property="Background" Value="LightBlue"/>
                                         <Setter Property="Foreground" Value="Black"/>
                                     </MultiTrigger>
-                                    <!-- 鼠标悬停状态 -->
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="LightBlue"/>
-                                    </Trigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
@@ -73,7 +73,7 @@
                     <Setter Property="ContextMenu" Value="{StaticResource ListViewItemContextMenu}"/>
                 </Style>
             </ListView.ItemContainerStyle>
-            
+
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -89,7 +89,7 @@
                                    Foreground="#ddd" />
                         <TextBlock Name="LrcTextBlock" Grid.Column="2" Text="{Binding LrcText}" />
                     </Grid>
-                    
+
                 </DataTemplate>
             </ListView.ItemTemplate>
             <lrc:LrcLine LrcTimeText="00:00.524" LrcText="一条大河波浪宽" />

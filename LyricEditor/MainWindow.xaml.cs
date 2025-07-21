@@ -47,7 +47,7 @@ namespace LyricEditor
             Timer = new DispatcherTimer();
             Timer.Tick += new EventHandler(Timer_Tick);
             Timer.Interval = new TimeSpan(0, 0, 0, 0, 20);
-            Timer.Start();
+            //Timer.Start();
 
             mediaPlayer.PlaybackStopped += MediaPlayer_PlaybackStopped;
 
@@ -59,7 +59,7 @@ namespace LyricEditor
         //public AudioFileReader audioFileReader = null;
         public dynamic audioFile = null;
         private SampleChannel sampleChannel;
-        public IWavePlayer mediaPlayer = new WaveOutEvent();
+        public WaveOutEvent mediaPlayer = new WaveOutEvent();
 
         #region 成员变量
 
@@ -99,13 +99,18 @@ namespace LyricEditor
             if (!IsMediaAvailable)
                 return;
 
-            var current = audioFile.CurrentTime;
+            TimeSpan current = audioFile.CurrentTime;
+            Timer_Tick_Set(current);
+        }
+
+        public void Timer_Tick_Set(TimeSpan current)
+        {
             CurrentTimeText.Text = $"{current.Minutes:00}:{current.Seconds:00}";
 
             TimeBackground.Value =
                 audioFile.CurrentTime.TotalMilliseconds
                 / audioFile.TotalTime.TotalMilliseconds;
-            CurrentLrcText.Text = LrcManager.Instance.GetNearestLrc(audioFile.CurrentTime);
+            CurrentLrcText.Text = LrcManager.Instance.GetNearestLrc(current);
         }
 
         #endregion
@@ -182,11 +187,10 @@ namespace LyricEditor
 
         private void ImportMedia(string filename)
         {
-            if (audioPath == filename) return;
+            if (audioPath == filename)
+                return;
             else
-            {
                 audioPath = filename;
-            }
 
             try
             {
@@ -198,7 +202,7 @@ namespace LyricEditor
                 File.Copy(filename, tmpPath, true);
 
                 if (Path.GetExtension(tmpPath) == ".mp3")
-                    audioFile = new AudioFileReader(tmpPath);
+                    audioFile = new Mp3FileReader(tmpPath);
                 else if (Path.GetExtension(tmpPath) == ".flac")
                     audioFile = new FlacReader(tmpPath);
 
@@ -215,7 +219,7 @@ namespace LyricEditor
 
                 string performers = theFile.Artist;
                 PerformerBox.Text = performers;
-                Title = $"歌词编辑器     {performers} - {title}";
+                Title = $"歌词制作器     {performers} - {title}";
 
                 string album = theFile.Album;
                 AlbumBox.Text = album;
@@ -265,6 +269,54 @@ namespace LyricEditor
         }
 
         /// <summary>
+        /// 关闭文件
+        /// </summary>
+        private void CloseMedia()
+        {
+            Timer.Stop();
+            CurrentTimeText.Text = "00:00";
+            TotalTimeText.Text = "00:00";
+
+            TimeBackground.Value = 0;
+            CurrentLrcText.Text = "";
+
+            Cover.Source = ResourceHelper.GetIcon("disc.png");
+
+            audioPath = null;
+            audioFile?.Dispose();
+            audioFile = null;
+            mediaPlayer?.Dispose();
+
+            //清理临时文件
+            foreach (string tmp in tmpList) File.Delete(tmp);
+            
+            Title = $"歌词制作器";
+            TitleBox.Text = "";
+            PerformerBox.Text = "";
+            AlbumBox.Text = "";
+
+            ClearAllLyrics();
+        }
+
+        /// <summary>
+        /// 清空歌词
+        /// </summary>
+        private void ClearAllLyrics()
+        {
+            switch (CurrentLrcPanel)
+            {
+                case LrcPanelType.LrcLinePanel:
+                    LrcManager.Instance.Clear();
+                    LrcLinePanel.UpdateLrcPanel();
+                    break;
+
+                case LrcPanelType.LrcTextPanel:
+                    LrcTextPanel.Clear();
+                    break;
+            }
+        }
+
+        /// <summary>
         /// 播放结束后停止
         /// </summary>
         private void MediaPlayer_PlaybackStopped(object sender, StoppedEventArgs e)
@@ -279,7 +331,7 @@ namespace LyricEditor
         {
             var totalTime = audioFile.TotalTime;
             TotalTimeText.Text = $"{totalTime.Minutes:00}:{totalTime.Seconds:00}";
-            CurrentTimeText.Text = "00:00";
+            Timer_Tick_Set(TimeSpan.Zero);
             Pause();
         }
 
@@ -358,16 +410,9 @@ namespace LyricEditor
         /// </summary>
         private void Window_Closed(object sender, EventArgs e)
         {
-            Timer.Stop();
-
-            audioFile?.Dispose();
-            audioFile = null;
-            mediaPlayer?.Dispose();
-
             if (searchLyricWindow != null && searchLyricWindow.IsLoaded) searchLyricWindow.Close();
 
-            //清理临时文件
-            foreach (string tmp in tmpList) File.Delete(tmp);
+            CloseMedia();
 
             // 保存配置文件
             XmlDocument xmlDocument = new();
@@ -549,6 +594,27 @@ namespace LyricEditor
         }
 
         /// <summary>
+        /// 重新载入
+        /// </summary>
+        private void MenuItemReload_Click(object sender, RoutedEventArgs e)
+        {
+            if (audioPath == null) return;
+            string tempPath = audioPath;
+
+            CloseMedia();
+
+            ImportMedia(tempPath);
+        }
+
+        /// <summary>
+        /// 关闭文件
+        /// </summary>
+        private void MenuItemCloseFile_Click(object sender, RoutedEventArgs e)
+        {
+            CloseMedia();
+        }
+
+        /// <summary>
         /// 配置选项发生变化
         /// </summary>
         private void Settings_Checked(object sender, RoutedEventArgs e)
@@ -706,10 +772,12 @@ namespace LyricEditor
         {
             if (!isPlaying)
             {
+                Timer.Start();
                 Play();
             }
             else
             {
+                Timer.Stop();
                 Pause();
             }
         }
@@ -719,7 +787,10 @@ namespace LyricEditor
         /// </summary>
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
+            Timer.Stop();
             Stop();
+
+            Timer_Tick_Set(TimeSpan.Zero);
         }
 
         /// <summary>
@@ -756,6 +827,17 @@ namespace LyricEditor
         //{
         //    mediaPlayer.SpeedRatio = e.NewValue;
         //}
+
+        /// <summary>
+        /// 音量条
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            float newVolume = (float)e.NewValue;
+            if (sampleChannel != null) sampleChannel.Volume = newVolume;
+        }
 
         SearchLyric searchLyricWindow;
         /// <summary>
@@ -795,6 +877,8 @@ namespace LyricEditor
                 0,
                 (int)(audioFile.TotalTime.TotalMilliseconds * percent)
             );
+
+            Timer_Tick_Set(audioFile.CurrentTime);
         }
 
         /// <summary>
@@ -873,7 +957,7 @@ namespace LyricEditor
         /// </summary>
         private void MoveUp_Click(object sender, RoutedEventArgs e)
         {
-            LrcLinePanel.MoveUp();
+            LrcLinePanel.MoveUpLyric();
         }
 
         /// <summary>
@@ -881,7 +965,7 @@ namespace LyricEditor
         /// </summary>
         private void MoveDown_Click(object sender, RoutedEventArgs e)
         {
-            LrcLinePanel.MoveDown();
+            LrcLinePanel.MoveDownLyric();
         }
 
         /// <summary>
@@ -908,17 +992,7 @@ namespace LyricEditor
         /// </summary>
         private void ClearAll_Click(object sender, RoutedEventArgs e)
         {
-            switch (CurrentLrcPanel)
-            {
-                case LrcPanelType.LrcLinePanel:
-                    LrcManager.Instance.Clear();
-                    LrcLinePanel.UpdateLrcPanel();
-                    break;
-
-                case LrcPanelType.LrcTextPanel:
-                    LrcTextPanel.Clear();
-                    break;
-            }
+            ClearAllLyrics();
         }
 
         /// <summary>
@@ -966,12 +1040,16 @@ namespace LyricEditor
             }
         }
 
-        #endregion
-
-        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void MoveUpShortcut_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            float newVolume = (float)e.NewValue;
-            if (sampleChannel != null) sampleChannel.Volume = newVolume;
+            LrcLinePanel.MoveUp();
         }
+
+        private void MoveDownShortcut_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            LrcLinePanel.MoveDown();
+        }
+
+        #endregion
     }
 }

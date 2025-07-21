@@ -22,14 +22,14 @@
         mc:Ignorable="d">
     <Window.Resources>
         <ResourceDictionary>
-
             <RoutedUICommand x:Key="SetTimeShortcut" />
             <RoutedUICommand x:Key="HelpShortcut" />
             <RoutedUICommand x:Key="PlayShortcut" />
             <RoutedUICommand x:Key="UndoShortcut" />
             <RoutedUICommand x:Key="RedoShortcut" />
             <RoutedUICommand x:Key="InsertShortcut" />
-
+            <RoutedUICommand x:Key="MoveUpShortcut" />
+            <RoutedUICommand x:Key="MoveDownShortcut" />
         </ResourceDictionary>
     </Window.Resources>
     <Window.InputBindings>
@@ -39,6 +39,8 @@
         <KeyBinding Command="{StaticResource UndoShortcut}" Gesture="Ctrl+Z" />
         <KeyBinding Command="{StaticResource RedoShortcut}" Gesture="Ctrl+Y" />
         <KeyBinding Command="{StaticResource InsertShortcut}" Gesture="Insert" />
+        <KeyBinding Command="{StaticResource MoveUpShortcut}" Key="NumPad8" />
+        <KeyBinding Command="{StaticResource MoveDownShortcut}" Key="NumPad5" />
     </Window.InputBindings>
     <Window.CommandBindings>
         <CommandBinding Command="{StaticResource SetTimeShortcut}" Executed="SetTimeShortcut_Executed" />
@@ -47,6 +49,8 @@
         <CommandBinding Command="{StaticResource UndoShortcut}" Executed="UndoShortcut_Executed" />
         <CommandBinding Command="{StaticResource RedoShortcut}" Executed="RedoShortcut_Executed" />
         <CommandBinding Command="{StaticResource InsertShortcut}" Executed="InsertShortcut_Executed" />
+        <CommandBinding Command="{StaticResource MoveUpShortcut}" Executed="MoveUpShortcut_Executed" />
+        <CommandBinding Command="{StaticResource MoveDownShortcut}" Executed="MoveDownShortcut_Executed" />
     </Window.CommandBindings>
 
     <Grid>
@@ -84,6 +88,8 @@
                 <MenuItem Header="保存" Click="ExportLyric_Click" />
                 <MenuItem Header="保存至标签" Click="ExportLyricToTag_Click" />
                 <MenuItem Header="复制到剪贴板" Click="ExportLyricToClipboard_Click" />
+                <MenuItem Header="重新载入" Click="MenuItemReload_Click"/>
+                <MenuItem Header="关闭文件" Click="MenuItemCloseFile_Click"/>
                 <Separator />
                 <MenuItem Header="首选项" Style="{StaticResource SubMenuItemHeaderStyle}">
                     <MenuItem.Resources>

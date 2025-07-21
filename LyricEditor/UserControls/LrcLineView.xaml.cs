@@ -1,6 +1,5 @@
 ﻿using LyricEditor.Lyric;
 using System;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -49,6 +48,10 @@ namespace LyricEditor.UserControls
         public bool ReachEnd
         {
             get => SelectedIndex == LrcLinePanel.Items.Count - 1;
+        }
+        public bool ReachStart
+        {
+            get => SelectedIndex == 0;
         }
 
         /// <summary>
@@ -170,8 +173,10 @@ namespace LyricEditor.UserControls
             if (!line.LrcTime.HasValue)
                 return;
 
-            //MainWindow.mediaPlayer.Position = line.LrcTime.Value;
-            ((MainWindow)Application.Current.MainWindow).audioFile.CurrentTime = line.LrcTime.Value;
+            TimeSpan linetime = line.LrcTime.Value;
+
+            ((MainWindow)Application.Current.MainWindow).audioFile.CurrentTime = linetime;
+            ((MainWindow)Application.Current.MainWindow).Timer_Tick_Set(linetime);
         }
 
         /// <summary>
@@ -308,10 +313,30 @@ namespace LyricEditor.UserControls
 
         public void DeleteLine() => LrcManager.Instance.DeleteLine(LrcLinePanel);
 
-        public void MoveUp() => LrcManager.Instance.MoveUp(LrcLinePanel);
+        public void MoveUpLyric() => LrcManager.Instance.MoveUp(LrcLinePanel);
 
-        public void MoveDown() => LrcManager.Instance.MoveDown(LrcLinePanel);
+        public void MoveDownLyric() => LrcManager.Instance.MoveDown(LrcLinePanel);
 
         public void AddTit(string tt) => LrcManager.Instance.AddTit(LrcLinePanel, tt);
+
+        public void MoveUp()
+        {
+            int index = SelectedIndex;
+            if (!ReachStart)
+            {
+                SelectedIndex = SelectedIndex - 1 < 0 ? 0 : SelectedIndex - 1;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[index - 3 > 0 ? index - 3 : SelectedIndex]);
+            }
+        }
+
+        public void MoveDown()
+        {
+            int index = SelectedIndex;
+            if (!ReachEnd)
+            {
+                SelectedIndex = SelectedIndex + 1 > LrcLinePanel.Items.Count ? LrcLinePanel.Items.Count : SelectedIndex + 1;
+                LrcLinePanel.ScrollIntoView(LrcLinePanel.Items[index + 10 < LrcLinePanel.Items.Count ? index + 10 : SelectedIndex]);
+            }
+        }
     }
 }
