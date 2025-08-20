@@ -51,7 +51,7 @@ namespace LyricEditor
 
             mediaPlayer.PlaybackStopped += MediaPlayer_PlaybackStopped;
 
-            //ImportMedia("D:\\C#\\LyricEditor\\毛不易 - 消愁.mp3");
+            //ImportMedia("D:\\C#\\LyricEditor\\王唯旖 - 舍得.mp3");
         }
 
         //public MediaPlayer mediaPlayer = new MediaPlayer();
@@ -289,7 +289,7 @@ namespace LyricEditor
 
             //清理临时文件
             foreach (string tmp in tmpList) File.Delete(tmp);
-            
+
             Title = $"歌词制作器";
             TitleBox.Text = "";
             PerformerBox.Text = "";

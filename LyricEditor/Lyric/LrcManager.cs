@@ -41,7 +41,7 @@ namespace LyricEditor.Lyric
                 return false;
             }
 
-            var lines = Regex.Split(text, @"\r?\n");
+            var lines = Regex.Split(text, @"\r\n|\r|\n");
 
             // 查找形如 [00:00.000] 的时间标记
             var reTimeMark = new Regex(@"\[\d+\:\d+\.\d+\]");
